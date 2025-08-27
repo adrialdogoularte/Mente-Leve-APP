@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff, User, Mail, Lock, GraduationCap, Building, Calendar, FileText, AlertCircle, Heart } from 'lucide-react';
+import {
+  Eye, EyeOff, User, Mail, Lock, GraduationCap, Building, Calendar, FileText, AlertCircle, Heart
+} from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
 
@@ -63,6 +65,11 @@ const Registro = () => {
       ...formData,
       especialidades
     });
+    
+    // Limpar erro quando especialidade for selecionada
+    if (especialidades.length > 0) {
+      setError('');
+    }
   };
 
   const handleTipoUsuarioChange = (tipo) => {
@@ -98,8 +105,11 @@ const Registro = () => {
         return 'Todos os campos de aluno são obrigatórios';
       }
     } else if (tipoUsuario === 'psicologo') {
-      if (!formData.crp || formData.especialidades.length === 0) {
-        return 'CRP e pelo menos uma especialidade são obrigatórios';
+      if (!formData.crp) {
+        return 'CRP é obrigatório';
+      }
+      if (!formData.especialidades || formData.especialidades.length === 0) {
+        return 'Pelo menos uma especialidade deve ser selecionada';
       }
     }
 
@@ -427,6 +437,13 @@ const Registro = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Especialidades * (selecione pelo menos uma)
                   </label>
+                  {formData.especialidades.length > 0 && (
+                    <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-700">
+                        {formData.especialidades.length} especialidade(s) selecionada(s)
+                      </p>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
                     {especialidadesDisponiveis.map((especialidade) => (
                       <label key={especialidade} className="flex items-center space-x-2 cursor-pointer">
@@ -492,4 +509,3 @@ const Registro = () => {
 };
 
 export default Registro;
-
