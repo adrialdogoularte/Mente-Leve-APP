@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
+import Header from './Header';
+import Footer from './Footer';
 
 const Autoavaliacao = () => {
   const navigate = useNavigate();
@@ -218,77 +220,79 @@ const Autoavaliacao = () => {
   if (resultado) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
+        <Header />
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-lg shadow-sm p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                Resultado da Autoavaliação
-              </h1>
-              <p className="text-gray-600">
-                Sua avaliação foi concluída com sucesso. Confira os resultados abaixo.
-              </p>
-            </div>
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Resultado da Autoavaliação
+            </h1>
+            <p className="text-gray-600">
+              Sua avaliação foi concluída com sucesso. Confira os resultados abaixo.
+            </p>
+          </div>
 
-            {/* Resultado Principal */}
-            <div className={`border-2 rounded-lg p-6 mb-6 ${obterCorNivel(resultado.nivel_risco)}`}>
-              <div className="flex items-center justify-center mb-4">
-                {obterIconeNivel(resultado.nivel_risco)}
-                <span className="ml-3 text-xl font-semibold capitalize">
-                  {resultado.nivel_risco} Risco
-                </span>
-              </div>
-              <div className="text-center mb-4">
-                <span className="text-2xl font-bold">
-                  {resultado.pontuacao_total}/40 pontos
-                </span>
-              </div>
-              <p className="text-center">
-                {obterMensagemNivel(resultado.nivel_risco)}
-              </p>
+          {/* Resultado Principal */}
+          <div className={`border-2 rounded-lg p-6 mb-6 ${obterCorNivel(resultado.nivel_risco)}`}>
+            <div className="flex items-center justify-center mb-4">
+              {obterIconeNivel(resultado.nivel_risco)}
+              <span className="ml-3 text-xl font-semibold capitalize">
+                {resultado.nivel_risco} Risco
+              </span>
             </div>
+            <div className="text-center mb-4">
+              <span className="text-2xl font-bold">
+                {resultado.pontuacao_total}/40 pontos
+              </span>
+            </div>
+            <p className="text-center">
+              {obterMensagemNivel(resultado.nivel_risco)}
+            </p>
+          </div>
 
-            {/* Recomendações */}
-            <div className="bg-blue-50 rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-semibold text-blue-900 mb-4">
-                Recomendações Personalizadas
-              </h3>
-              <ul className="space-y-3">
-                {resultado.recomendacoes.map((recomendacao, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="text-blue-500 mr-3 mt-1">•</span>
-                    <span className="text-blue-800">{recomendacao}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Recomendações */}
+          <div className="bg-blue-50 rounded-lg p-6 mb-6">
+            <h3 className="text-lg font-semibold text-blue-900 mb-4">
+              Recomendações Personalizadas
+            </h3>
+            <ul className="space-y-3">
+              {resultado.recomendacoes.map((recomendacao, index) => (
+                <li key={index} className="flex items-start">
+                  <span className="text-blue-500 mr-3 mt-1">•</span>
+                  <span className="text-blue-800">{recomendacao}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-            {/* Ações */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => navigate('/perfil')}
-                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-              >
-                Ver Histórico de Avaliações
-              </button>
-              <button
-                onClick={() => {
-                  setResultado(null);
-                  setRespostas({});
-                  setPerguntaAtual(0);
-                }}
-                className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-              >
-                Nova Avaliação
-              </button>
-              <button
-                onClick={() => navigate('/')}
-                className="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-              >
-                Voltar ao Início
-              </button>
-            </div>
+          {/* Ações */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={() => navigate("/perfil")}
+              className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              Ver Histórico de Avaliações
+            </button>
+            <button
+              onClick={() => {
+                setResultado(null);
+                setRespostas({});
+                setPerguntaAtual(0);
+              }}
+              className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+            >
+              Nova Avaliação
+            </button>
+            <button
+              onClick={() => navigate("/")}
+              className="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+            >
+              Voltar ao Início
+            </button>
           </div>
         </div>
+      </div>
+      <Footer />
       </div>
     );
   }
@@ -299,6 +303,7 @@ const Autoavaliacao = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      <Header />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-sm p-8">
           {/* Header */}
@@ -409,9 +414,9 @@ const Autoavaliacao = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
 
 export default Autoavaliacao;
-
