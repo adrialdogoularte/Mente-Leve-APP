@@ -378,102 +378,133 @@ const Perfil = () => {
                     </div>
 
                     {estatisticasHumor.emocoes_frequentes?.length > 0 && (
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-600">Emoções mais frequentes:</p>
-                        <ul className="list-disc list-inside text-sm text-gray-800">
-                          {estatisticasHumor.emocoes_frequentes.map((emocao, index) => (
-                            <li key={index}>{emocao.emocao} ({emocao.contagem} vezes)</li>
+                      <div>
+                        <span className="text-sm text-gray-600 block mb-2">Emoções frequentes</span>
+                        <div className="space-y-1">
+                          {estatisticasHumor.emocoes_frequentes.slice(0, 3).map(([emocao, count]) => (
+                            <div key={emocao} className="flex items-center justify-between text-sm text-gray-700">
+                              <span>{emocao}</span>
+                              <span className="font-medium">{count}</span>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       </div>
                     )}
-                  </div>
-                </div>
-              )}
-
-              {/* Registros de Humor Recentes */}
-              {user?.tipo_usuario === 'aluno' && registrosHumor.length > 0 && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Registros de Humor Recentes</h3>
-                  <div className="space-y-4">
-                    {registrosHumor.map((registro) => (
-                      <div key={registro.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-700">{formatarData(registro.data_registro)}</span>
-                          <span className="text-sm font-semibold text-blue-600">Humor: {registro.humor}</span>
-                        </div>
-                        <p className="text-gray-800 text-sm">{registro.observacoes || 'Nenhuma observação.'}</p>
-                      </div>
-                    ))}
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Avaliações de Autoavaliação */}
-          <div className="lg:col-span-2">
+          {/* Conteúdo Principal (Avaliações e Humor) */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Minhas Avaliações */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Minhas Autoavaliações</h2>
-
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Minhas Avaliações</h2>
               {avaliacoes.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
-                  <p>Você ainda não realizou nenhuma autoavaliação.</p>
-                  <p className="mt-2">Comece agora para acompanhar seu bem-estar!</p>
-                  <button
-                    onClick={() => window.location.href = '/autoavaliacao'}
-                    className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Fazer Autoavaliação
-                  </button>
+                  <AlertCircle className="h-12 w-12 mx-auto mb-4" />
+                  <p>Nenhuma avaliação realizada ainda.</p>
+                  <p>Faça sua primeira autoavaliação para acompanhar seu bem-estar.</p>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {avaliacoes.map((avaliacao) => (
-                    <div key={avaliacao.id} className="bg-gray-50 p-5 rounded-lg border border-gray-200">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-gray-700">Avaliação de {formatarData(avaliacao.data_criacao)}</span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${obterCorNivelRisco(avaliacao.nivel_risco)}`}>
-                          {obterIconeNivelRisco(avaliacao.nivel_risco)} {avaliacao.nivel_risco.toUpperCase()}
-                        </span>
-                      </div>
-                      <p className="text-gray-800 mb-3">Pontuação Total: <span className="font-semibold">{avaliacao.pontuacao_total}</span></p>
-                      <p className="text-gray-700 text-sm">Recomendações:</p>
-                      <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 mt-2">
-                        {avaliacao.recomendacoes.map((rec, idx) => (
-                          <li key={idx}>{rec}</li>
-                        ))}
-                      </ul>
-                      {user?.tipo_usuario === 'aluno' && psicologos.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          {showCompartilhamento === avaliacao.id ? (
-                            <div className="flex flex-col space-y-2">
-                              <select
-                                className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                                onChange={(e) => handleCompartilharAvaliacao(avaliacao.id, e.target.value)}
-                              >
-                                <option value="">Selecionar Psicólogo</option>
-                                {psicologos.map(psicologo => (
-                                  <option key={psicologo.id} value={psicologo.id}>{psicologo.nome}</option>
-                                ))}
-                              </select>
-                              <button
-                                onClick={() => setShowCompartilhamento(null)}
-                                className="text-sm text-gray-500 hover:text-gray-700"
-                              >
-                                Cancelar
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => setShowCompartilhamento(avaliacao.id)}
-                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
-                            >
-                              <Share2 className="h-4 w-4 mr-2" />
-                              Compartilhar com Psicólogo
-                            </button>
-                          )}
+                    <div key={avaliacao.id} className="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center space-x-2 mb-1">
+                          {obterIconeNivelRisco(avaliacao.nivel_risco)}
+                          <span className={`font-semibold capitalize ${obterCorNivelRisco(avaliacao.nivel_risco)} px-2 py-0.5 rounded-full text-xs`}>
+                            {avaliacao.nivel_risco} Risco
+                          </span>
                         </div>
+                        <p className="text-sm text-gray-600">Pontuação: {avaliacao.pontuacao_total}/40</p>
+                        <p className="text-xs text-gray-500">Realizada em: {formatarData(avaliacao.data_criacao)}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setShowCompartilhamento(avaliacao.id)}
+                          className="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                          title="Compartilhar Avaliação"
+                        >
+                          <Share2 className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Lógica para visualizar detalhes da avaliação
+                            alert('Visualizar detalhes da avaliação ' + avaliacao.id);
+                          }}
+                          className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                          title="Ver Detalhes"
+                        >
+                          <Eye className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal de Compartilhamento */}
+            {showCompartilhamento && (
+              <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 shadow-xl w-full max-w-md">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Compartilhar Avaliação</h3>
+                  <p className="text-gray-600 mb-4">Selecione um psicólogo para compartilhar esta avaliação:</p>
+                  
+                  {psicologos.length === 0 ? (
+                    <p className="text-sm text-gray-500">Nenhum psicólogo disponível para compartilhamento.</p>
+                  ) : (
+                    <div className="space-y-3 mb-4">
+                      {psicologos.map(psicologo => (
+                        <div key={psicologo.id} className="flex items-center justify-between border border-gray-200 rounded-lg p-3">
+                          <span>{psicologo.nome} ({psicologo.email})</span>
+                          <button
+                            onClick={() => handleCompartilharAvaliacao(showCompartilhamento, psicologo.id)}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors"
+                          >
+                            Compartilhar
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setShowCompartilhamento(null)}
+                      className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Registros de Humor Recentes */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Registros de Humor Recentes</h2>
+              {registrosHumor.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Heart className="h-12 w-12 mx-auto mb-4" />
+                  <p>Nenhum registro de humor ainda.</p>
+                  <p>Comece a registrar seu humor diariamente para acompanhar seu bem-estar.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {registrosHumor.map((registro) => (
+                    <div key={registro.id} className="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-3xl">{moods.find(m => m.id === registro.nivel_humor)?.emoji}</span>
+                        <div>
+                          <p className="text-sm font-medium text-gray-800">{moods.find(m => m.id === registro.nivel_humor)?.label}</p>
+                          <p className="text-xs text-gray-500">{formatarData(registro.data_registro)}</p>
+                        </div>
+                      </div>
+                      {registro.descricao && (
+                        <span className="text-xs text-gray-500 truncate max-w-[100px]">{registro.descricao}</span>
                       )}
                     </div>
                   ))}
@@ -483,10 +514,17 @@ const Perfil = () => {
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );
 };
+
+const moods = [
+  { id: 1, label: 'Muito Ruim', emoji: '😞' },
+  { id: 2, label: 'Ruim', emoji: '🙁' },
+  { id: 3, label: 'Neutro', emoji: '😐' },
+  { id: 4, label: 'Bom', emoji: '🙂' },
+  { id: 5, label: 'Muito Bom', emoji: '😀' },
+];
 
 export default Perfil;

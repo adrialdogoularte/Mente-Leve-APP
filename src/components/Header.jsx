@@ -18,7 +18,7 @@ const Header = () => {
 
   const navigationItems = [
     { name: 'Início', href: '/' },
-    { name: 'Autoavaliação', href: '/autoavaliacao' },
+    ...(user?.tipo_usuario === 'aluno' ? [{ name: 'Autoavaliação', href: '/autoavaliacao' }] : []),
     { name: 'Registro de Humor', href: '/registro-humor' },
     { name: 'Dicas', href: '/dicas' },
     { name: 'Agendamento', href: '/agendamento' },
@@ -236,4 +236,3 @@ const Header = () => {
 };
 
 export default Header;
-
