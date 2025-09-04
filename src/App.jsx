@@ -12,6 +12,7 @@ import Dicas from './components/Dicas';
 import Agendamento from './components/Agendamento';
 import Suporte from './components/Suporte';
 import Perfil from './components/Perfil';
+import MinhasAvaliacoes from './components/MinhasAvaliacoes';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -74,6 +75,11 @@ const AppRoutes = () => {
           <Perfil />
         </ProtectedRoute>
       } />
+      <Route path="/minhas-avaliacoes" element={
+        <ProtectedRoute requiredUserType="aluno">
+          <MinhasAvaliacoes />
+        </ProtectedRoute>
+      } />
       
       {/* Rota padrão - redireciona para login se não autenticado */}
       <Route path="*" element={user ? <Navigate to="/" replace /> : <Navigate to="/login" replace />} />
@@ -94,4 +100,3 @@ function App() {
 }
 
 export default App;
-

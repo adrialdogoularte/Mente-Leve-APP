@@ -268,7 +268,7 @@ const Autoavaliacao = () => {
           {/* Ações */}
           <div className="flex flex-col sm:flex-row gap-4">
             <button
-              onClick={() => navigate("/perfil")}
+              onClick={() => navigate("/minhas-avaliacoes")}
               className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
             >
               Ver Histórico de Avaliações

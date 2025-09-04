@@ -35,7 +35,8 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <Heart className="h-8 w-8 text-blue-500" fill="currentColor" />
+            {/* <Heart className="h-8 w-8 text-blue-500" fill="currentColor" /> */}
+            <img src="logo.png" alt="logo" className="h-25 w-25"></img>
             <span className="text-xl font-bold text-gray-900">Mente Leve</span>
           </Link>
 

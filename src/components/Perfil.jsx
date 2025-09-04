@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  User, Calendar, BookOpen, GraduationCap, Share2, Eye, AlertCircle,
+  User, Calendar, BookOpen, GraduationCap, AlertCircle,
   CheckCircle, Clock, Edit, Save, X, Heart, TrendingUp, BarChart3
 } from 'lucide-react';
 import Header from './Header';
@@ -9,11 +9,8 @@ import Footer from './Footer';
 
 const Perfil = () => {
   const { user, api, atualizarPerfil, logout } = useAuth();
-  const [avaliacoes, setAvaliacoes] = useState([]);
   const [registrosHumor, setRegistrosHumor] = useState([]);
   const [estatisticasHumor, setEstatisticasHumor] = useState({});
-  const [psicologos, setPsicologos] = useState([]);
-  const [showCompartilhamento, setShowCompartilhamento] = useState(null);
   const [editandoPerfil, setEditandoPerfil] = useState(false);
   const [dadosPerfil, setDadosPerfil] = useState({
     nome: user?.nome || '',
@@ -32,10 +29,6 @@ const Perfil = () => {
     if (!user) return; // Não carrega dados se o usuário não estiver logado
 
     try {
-      // Carregar avaliações
-      const avaliacoesSalvas = JSON.parse(localStorage.getItem('avaliacoes') || '[]');
-      setAvaliacoes(avaliacoesSalvas);
-
       // Carregar registros de humor
       const humorResponse = await api.get('/humor?limite=30');
       setRegistrosHumor(humorResponse.data.registros || []);
@@ -43,13 +36,6 @@ const Perfil = () => {
       // Carregar estatísticas de humor
       const statsResponse = await api.get('/humor/estatisticas');
       setEstatisticasHumor(statsResponse.data);
-
-      // Se for psicólogo, carregar lista de psicólogos para compartilhamento
-      if (user?.tipo_usuario === 'aluno') {
-        // Aqui você pode implementar uma rota para listar psicólogos disponíveis
-        // const psicologosResponse = await api.get('/psicologos');
-        // setPsicologos(psicologosResponse.data.psicologos || []);
-      }
     } catch (error) {
       console.error('Erro ao carregar dados do perfil:', error);
       if (error.response && error.response.status === 401) {
@@ -98,21 +84,6 @@ const Perfil = () => {
     }
   };
 
-  const handleCompartilharAvaliacao = async (avaliacaoId, psicologoId) => {
-    try {
-      await api.post('/compartilhamentos', {
-        avaliacao_id: avaliacaoId,
-        psicologo_id: psicologoId
-      });
-
-      setSuccess('Avaliação compartilhada com sucesso!');
-      setShowCompartilhamento(null);
-      carregarDados(); // Recarregar para atualizar status
-    } catch (error) {
-      setError(error.response?.data?.message || 'Erro ao compartilhar avaliação');
-    }
-  };
-
   const formatarData = (dataString) => {
     const data = new Date(dataString);
     return data.toLocaleDateString('pt-BR', {
@@ -122,24 +93,6 @@ const Perfil = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const obterCorNivelRisco = (nivel) => {
-    switch (nivel) {
-      case 'baixo': return 'text-green-600 bg-green-100';
-      case 'medio': return 'text-yellow-600 bg-yellow-100';
-      case 'alto': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const obterIconeNivelRisco = (nivel) => {
-    switch (nivel) {
-      case 'baixo': return <CheckCircle className="h-4 w-4" />;
-      case 'medio': return <AlertCircle className="h-4 w-4" />;
-      case 'alto': return <AlertCircle className="h-4 w-4" />;
-      default: return <Clock className="h-4 w-4" />;
-    }
   };
 
   return (
@@ -379,13 +332,12 @@ const Perfil = () => {
 
                     {estatisticasHumor.emocoes_frequentes?.length > 0 && (
                       <div>
-                        <span className="text-sm text-gray-600 block mb-2">Emoções frequentes</span>
-                        <div className="space-y-1">
-                          {estatisticasHumor.emocoes_frequentes.slice(0, 3).map(([emocao, count]) => (
-                            <div key={emocao} className="flex items-center justify-between text-sm text-gray-700">
-                              <span>{emocao}</span>
-                              <span className="font-medium">{count}</span>
-                            </div>
+                        <div className="text-sm text-gray-600 mb-2">Emoções mais frequentes</div>
+                        <div className="flex flex-wrap gap-1">
+                          {estatisticasHumor.emocoes_frequentes.slice(0, 3).map((emocao, index) => (
+                            <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                              {emocao}
+                            </span>
                           ))}
                         </div>
                       </div>
@@ -396,121 +348,48 @@ const Perfil = () => {
             </div>
           </div>
 
-          {/* Conteúdo Principal (Avaliações e Humor) */}
+          {/* Conteúdo Principal */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Minhas Avaliações */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Minhas Avaliações</h2>
-              {avaliacoes.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <AlertCircle className="h-12 w-12 mx-auto mb-4" />
-                  <p>Nenhuma avaliação realizada ainda.</p>
-                  <p>Faça sua primeira autoavaliação para acompanhar seu bem-estar.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {avaliacoes.map((avaliacao) => (
-                    <div key={avaliacao.id} className="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center space-x-2 mb-1">
-                          {obterIconeNivelRisco(avaliacao.nivel_risco)}
-                          <span className={`font-semibold capitalize ${obterCorNivelRisco(avaliacao.nivel_risco)} px-2 py-0.5 rounded-full text-xs`}>
-                            {avaliacao.nivel_risco} Risco
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600">Pontuação: {avaliacao.pontuacao_total}/40</p>
-                        <p className="text-xs text-gray-500">Realizada em: {formatarData(avaliacao.data_criacao)}</p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => setShowCompartilhamento(avaliacao.id)}
-                          className="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
-                          title="Compartilhar Avaliação"
-                        >
-                          <Share2 className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            // Lógica para visualizar detalhes da avaliação
-                            alert('Visualizar detalhes da avaliação ' + avaliacao.id);
-                          }}
-                          className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-                          title="Ver Detalhes"
-                        >
-                          <Eye className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Modal de Compartilhamento */}
-            {showCompartilhamento && (
-              <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6 shadow-xl w-full max-w-md">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Compartilhar Avaliação</h3>
-                  <p className="text-gray-600 mb-4">Selecione um psicólogo para compartilhar esta avaliação:</p>
-                  
-                  {psicologos.length === 0 ? (
-                    <p className="text-sm text-gray-500">Nenhum psicólogo disponível para compartilhamento.</p>
-                  ) : (
-                    <div className="space-y-3 mb-4">
-                      {psicologos.map(psicologo => (
-                        <div key={psicologo.id} className="flex items-center justify-between border border-gray-200 rounded-lg p-3">
-                          <span>{psicologo.nome} ({psicologo.email})</span>
-                          <button
-                            onClick={() => handleCompartilharAvaliacao(showCompartilhamento, psicologo.id)}
-                            className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors"
-                          >
-                            Compartilhar
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex justify-end">
-                    <button
-                      onClick={() => setShowCompartilhamento(null)}
-                      className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Registros de Humor Recentes */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Registros de Humor Recentes</h2>
-              {registrosHumor.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Heart className="h-12 w-12 mx-auto mb-4" />
-                  <p>Nenhum registro de humor ainda.</p>
-                  <p>Comece a registrar seu humor diariamente para acompanhar seu bem-estar.</p>
+            {user?.tipo_usuario === 'aluno' && registrosHumor.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <Heart className="h-6 w-6 text-pink-600" />
+                    <h2 className="text-xl font-semibold text-gray-900">Registros de Humor Recentes</h2>
+                  </div>
+                  <span className="text-sm text-gray-500">Últimos {Math.min(registrosHumor.length, 10)} registros</span>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {registrosHumor.map((registro) => (
-                    <div key={registro.id} className="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+
+                <div className="space-y-3">
+                  {registrosHumor.slice(0, 10).map((registro, index) => (
+                    <div key={registro.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <span className="text-3xl">{moods.find(m => m.id === registro.nivel_humor)?.emoji}</span>
+                        <span className="text-2xl">{moods.find(m => m.id === registro.nivel_humor)?.emoji}</span>
                         <div>
                           <p className="text-sm font-medium text-gray-800">{moods.find(m => m.id === registro.nivel_humor)?.label}</p>
                           <p className="text-xs text-gray-500">{formatarData(registro.data_registro)}</p>
                         </div>
                       </div>
                       {registro.descricao && (
-                        <span className="text-xs text-gray-500 truncate max-w-[100px]">{registro.descricao}</span>
+                        <span className="text-xs text-gray-500 truncate max-w-[200px]">{registro.descricao}</span>
                       )}
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* Mensagem para quando não há registros de humor */}
+            {user?.tipo_usuario === 'aluno' && registrosHumor.length === 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="text-center py-8">
+                  <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum registro de humor encontrado</h3>
+                  <p className="text-gray-500 mb-4">Comece a registrar seu humor diário para acompanhar seu bem-estar</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
