@@ -9,7 +9,8 @@ const Footer = () => {
           {/* Logo e Descrição */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <Heart className="h-6 w-6 text-blue-500" fill="currentColor" />
+              {/* <Heart className="h-6 w-6 text-blue-500" fill="currentColor" /> */}
+              <img src="logo.png" alt="logo" className="h-25 w-25"></img>
               <span className="text-xl font-semibold text-gray-900">Mente Leve</span>
             </div>
             <p className="text-sm text-gray-600 max-w-xs">

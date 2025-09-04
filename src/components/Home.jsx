@@ -13,9 +13,10 @@ const Home = () => {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <div className="flex justify-center mb-6">
-            <div className="bg-gradient-to-r from-blue-500 to-teal-500 p-4 rounded-full">
+            {/* <div className="bg-gradient-to-r from-blue-500 to-teal-500 p-4 rounded-full">
               <Heart className="h-12 w-12 text-white" fill="currentColor" />
-            </div>
+            </div> */}
+            <img src="logo.png" alt="logo" className="h-40 w-40"></img>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Bem-vindo ao <span className="text-blue-600">Mente Leve</span>

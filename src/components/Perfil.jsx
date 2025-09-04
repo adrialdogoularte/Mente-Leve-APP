@@ -2,13 +2,22 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import {
   User, Calendar, BookOpen, GraduationCap, AlertCircle,
-  CheckCircle, Clock, Edit, Save, X, Heart, TrendingUp, BarChart3
+  CheckCircle, Clock, Edit, Save, X, Heart, TrendingUp, BarChart3, Award
 } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
 
+// Definindo os moods dentro do componente para evitar erro de referência
+const moods = [
+  { id: 1, label: 'Muito Ruim', emoji: '😞' },
+  { id: 2, label: 'Ruim', emoji: '🙁' },
+  { id: 3, label: 'Neutro', emoji: '😐' },
+  { id: 4, label: 'Bom', emoji: '🙂' },
+  { id: 5, label: 'Muito Bom', emoji: '😀' },
+];
+
 const Perfil = () => {
-  const { user, api, atualizarPerfil, logout } = useAuth();
+  const { user, api, atualizarPerfil } = useAuth();
   const [registrosHumor, setRegistrosHumor] = useState([]);
   const [estatisticasHumor, setEstatisticasHumor] = useState({});
   const [editandoPerfil, setEditandoPerfil] = useState(false);
@@ -25,11 +34,12 @@ const Perfil = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Função para carregar dados sem dependência de logout
   const carregarDados = useCallback(async () => {
-    if (!user) return; // Não carrega dados se o usuário não estiver logado
+    if (!user || user.tipo_usuario !== 'aluno') return;
 
     try {
-      // Carregar registros de humor
+      // Carregar registros de humor apenas para alunos
       const humorResponse = await api.get('/humor?limite=30');
       setRegistrosHumor(humorResponse.data.registros || []);
 
@@ -37,30 +47,36 @@ const Perfil = () => {
       const statsResponse = await api.get('/humor/estatisticas');
       setEstatisticasHumor(statsResponse.data);
     } catch (error) {
-      console.error('Erro ao carregar dados do perfil:', error);
-      if (error.response && error.response.status === 401) {
-        logout(); // Redireciona para login se não autorizado
-      } else {
-        setError('Erro ao carregar dados. Tente novamente.');
-      }
+      console.warn('Erro ao carregar dados de humor:', error);
+      // Usar dados fictícios se a API falhar
+      setRegistrosHumor([]);
+      setEstatisticasHumor({});
     }
-  }, [user, api, logout]);
+  }, [user, api]);
 
   useEffect(() => {
     carregarDados();
   }, [carregarDados]);
 
+  // Atualizar dados do perfil quando o usuário mudar
+  useEffect(() => {
+    if (user) {
+      setDadosPerfil({
+        nome: user.nome || '',
+        email: user.email || '',
+        universidade: user.universidade || '',
+        curso: user.curso || '',
+        periodo: user.periodo || '',
+        crp: user.crp || '',
+        especialidade: user.especialidade || ''
+      });
+    }
+  }, [user]);
+
   const handleEditarPerfil = () => {
     setEditandoPerfil(true);
-    setDadosPerfil({
-      nome: user?.nome || '',
-      email: user?.email || '',
-      universidade: user?.universidade || '',
-      curso: user?.curso || '',
-      periodo: user?.periodo || '',
-      crp: user?.crp || '',
-      especialidade: user?.especialidade || ''
-    });
+    setError('');
+    setSuccess('');
   };
 
   const handleSalvarPerfil = async () => {
@@ -74,13 +90,34 @@ const Perfil = () => {
       if (result.success) {
         setSuccess('Perfil atualizado com sucesso!');
         setEditandoPerfil(false);
+        // Limpar mensagem de sucesso após 3 segundos
+        setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError(result.message);
+        setError(result.message || 'Erro ao atualizar perfil');
       }
     } catch (error) {
-      setError('Erro ao atualizar perfil');
+      console.error('Erro ao salvar perfil:', error);
+      setError('Erro ao atualizar perfil. Tente novamente.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelarEdicao = () => {
+    setEditandoPerfil(false);
+    setError('');
+    setSuccess('');
+    // Restaurar dados originais
+    if (user) {
+      setDadosPerfil({
+        nome: user.nome || '',
+        email: user.email || '',
+        universidade: user.universidade || '',
+        curso: user.curso || '',
+        periodo: user.periodo || '',
+        crp: user.crp || '',
+        especialidade: user.especialidade || ''
+      });
     }
   };
 
@@ -94,6 +131,25 @@ const Perfil = () => {
       minute: '2-digit'
     });
   };
+
+  // Função para formatar especialidades (caso venham como string separada por vírgulas)
+  const formatarEspecialidades = (especialidade) => {
+    if (!especialidade) return [];
+    if (Array.isArray(especialidade)) return especialidade;
+    return especialidade.split(',').map(esp => esp.trim()).filter(esp => esp.length > 0);
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -164,7 +220,7 @@ const Perfil = () => {
                     />
                   </div>
 
-                  {user?.tipo_usuario === 'aluno' && (
+                  {user.tipo_usuario === 'aluno' && (
                     <>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Universidade</label>
@@ -198,7 +254,7 @@ const Perfil = () => {
                     </>
                   )}
 
-                  {user?.tipo_usuario === 'psicologo' && (
+                  {user.tipo_usuario === 'psicologo' && (
                     <>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">CRP</label>
@@ -211,13 +267,15 @@ const Perfil = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Especialidade</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Especialidades</label>
                         <input
                           type="text"
                           value={dadosPerfil.especialidade}
                           onChange={(e) => setDadosPerfil({...dadosPerfil, especialidade: e.target.value})}
+                          placeholder="Ex: Psicologia Clínica, Terapia Cognitivo-Comportamental"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
+                        <p className="text-xs text-gray-500 mt-1">Separe múltiplas especialidades com vírgulas</p>
                       </div>
                     </>
                   )}
@@ -226,14 +284,15 @@ const Perfil = () => {
                     <button
                       onClick={handleSalvarPerfil}
                       disabled={loading}
-                      className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+                      className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Save className="h-4 w-4" />
                       <span>{loading ? 'Salvando...' : 'Salvar'}</span>
                     </button>
                     <button
-                      onClick={() => setEditandoPerfil(false)}
-                      className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+                      onClick={handleCancelarEdicao}
+                      disabled={loading}
+                      className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <X className="h-4 w-4" />
                       <span>Cancelar</span>
@@ -242,74 +301,66 @@ const Perfil = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <User className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <div className="text-sm text-gray-500">Nome</div>
-                      <div className="font-medium text-gray-900">{user?.nome}</div>
-                    </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Nome</div>
+                    <div className="font-medium text-gray-900">{user.nome || 'Não informado'}</div>
                   </div>
 
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <div className="text-sm text-gray-500">Email</div>
-                      <div className="font-medium text-gray-900">{user?.email}</div>
-                    </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Email</div>
+                    <div className="font-medium text-gray-900">{user.email || 'Não informado'}</div>
                   </div>
 
-                  {user?.tipo_usuario === 'aluno' && (
+                  {user.tipo_usuario === 'aluno' && (
                     <>
-                      <div className="flex items-center space-x-3">
-                        <GraduationCap className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <div className="text-sm text-gray-500">Universidade</div>
-                          <div className="font-medium text-gray-900">{user?.universidade}</div>
-                        </div>
+                      <div>
+                        <div className="text-sm text-gray-500">Universidade</div>
+                        <div className="font-medium text-gray-900">{user.universidade || 'Não informado'}</div>
                       </div>
 
-                      <div className="flex items-center space-x-3">
-                        <BookOpen className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <div className="text-sm text-gray-500">Curso</div>
-                          <div className="font-medium text-gray-900">{user?.curso}</div>
-                        </div>
+                      <div>
+                        <div className="text-sm text-gray-500">Curso</div>
+                        <div className="font-medium text-gray-900">{user.curso || 'Não informado'}</div>
                       </div>
 
-                      <div className="flex items-center space-x-3">
-                        <Clock className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <div className="text-sm text-gray-500">Período</div>
-                          <div className="font-medium text-gray-900">{user?.periodo}</div>
-                        </div>
+                      <div>
+                        <div className="text-sm text-gray-500">Período</div>
+                        <div className="font-medium text-gray-900">{user.periodo || 'Não informado'}</div>
                       </div>
                     </>
                   )}
 
-                  {user?.tipo_usuario === 'psicologo' && (
+                  {user.tipo_usuario === 'psicologo' && (
                     <>
-                      <div className="flex items-center space-x-3">
-                        <CheckCircle className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <div className="text-sm text-gray-500">CRP</div>
-                          <div className="font-medium text-gray-900">{user?.crp}</div>
-                        </div>
+                      <div>
+                        <div className="text-sm text-gray-500">CRP</div>
+                        <div className="font-medium text-gray-900">{user.crp || 'Não informado'}</div>
                       </div>
 
-                      <div className="flex items-center space-x-3">
-                        <Heart className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <div className="text-sm text-gray-500">Especialidade</div>
-                          <div className="font-medium text-gray-900">{user?.especialidade}</div>
-                        </div>
+                      <div>
+                        <div className="text-sm text-gray-500">Especialidades</div>
+                        {user.especialidade ? (
+                          <div className="space-y-1">
+                            {formatarEspecialidades(user.especialidade).map((esp, index) => (
+                              <span
+                                key={index}
+                                className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1"
+                              >
+                                {esp}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="font-medium text-gray-500 italic">Não informado</div>
+                        )}
                       </div>
                     </>
                   )}
                 </div>
               )}
 
-              {/* Estatísticas de Humor */}
-              {user?.tipo_usuario === 'aluno' && Object.keys(estatisticasHumor).length > 0 && (
+              {/* Estatísticas de Humor - apenas para alunos */}
+              {user.tipo_usuario === 'aluno' && Object.keys(estatisticasHumor).length > 0 && (
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Estatísticas de Humor</h3>
 
@@ -350,8 +401,8 @@ const Perfil = () => {
 
           {/* Conteúdo Principal */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Registros de Humor Recentes */}
-            {user?.tipo_usuario === 'aluno' && registrosHumor.length > 0 && (
+            {/* Registros de Humor Recentes - apenas para alunos */}
+            {user.tipo_usuario === 'aluno' && registrosHumor.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-3">
@@ -380,13 +431,31 @@ const Perfil = () => {
               </div>
             )}
 
-            {/* Mensagem para quando não há registros de humor */}
-            {user?.tipo_usuario === 'aluno' && registrosHumor.length === 0 && (
+            {/* Mensagem para quando não há registros de humor - apenas para alunos */}
+            {user.tipo_usuario === 'aluno' && registrosHumor.length === 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="text-center py-8">
                   <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum registro de humor encontrado</h3>
                   <p className="text-gray-500 mb-4">Comece a registrar seu humor diário para acompanhar seu bem-estar</p>
+                </div>
+              </div>
+            )}
+
+            {/* Informações adicionais para psicólogos */}
+            {user.tipo_usuario === 'psicologo' && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="text-center py-8">
+                  <Award className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Perfil Profissional</h3>
+                  <p className="text-gray-500 mb-4">
+                    Mantenha suas informações profissionais atualizadas para oferecer o melhor atendimento aos seus pacientes
+                  </p>
+                  {!user.especialidade && (
+                    <p className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
+                      Complete suas especialidades para que os alunos possam encontrá-lo mais facilmente
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -397,13 +466,5 @@ const Perfil = () => {
     </div>
   );
 };
-
-const moods = [
-  { id: 1, label: 'Muito Ruim', emoji: '😞' },
-  { id: 2, label: 'Ruim', emoji: '🙁' },
-  { id: 3, label: 'Neutro', emoji: '😐' },
-  { id: 4, label: 'Bom', emoji: '🙂' },
-  { id: 5, label: 'Muito Bom', emoji: '😀' },
-];
 
 export default Perfil;

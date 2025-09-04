@@ -18,7 +18,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-} );
+});
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -27,8 +27,10 @@ export const AuthProvider = ({ children }) => {
   const setAuthData = useCallback((userData, accessToken, refreshToken) => {
     if (accessToken) localStorage.setItem('access_token', accessToken);
     if (refreshToken) localStorage.setItem('refresh_token', refreshToken);
-    if (userData) localStorage.setItem('user', JSON.stringify(userData));
-    if (userData) setUser(userData);
+    if (userData) {
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+    }
   }, []);
 
   const clearAuthData = useCallback(() => {
@@ -36,30 +38,12 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
     setUser(null);
+    // Apenas redireciona se não estiver na página de login para evitar loop
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
   }, []);
 
-  useEffect(() => {
-    const loadUser = () => {
-      try {
-        const storedUser = localStorage.getItem('user');
-        const accessToken = localStorage.getItem('access_token');
-        if (storedUser && accessToken) {
-          setUser(JSON.parse(storedUser));
-        } else {
-          clearAuthData();
-        }
-      } catch (error) {
-        console.error('Erro ao carregar usuário do localStorage:', error);
-        clearAuthData();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUser();
-  }, [clearAuthData]);
-
-  // Interceptor para adicionar o token de acesso a todas as requisições
   useEffect(() => {
     const requestInterceptor = api.interceptors.request.use(
       (config) => {
@@ -69,21 +53,16 @@ export const AuthProvider = ({ children }) => {
         }
         return config;
       },
-      (error) => {
-        return Promise.reject(error);
-      }
+      (error) => Promise.reject(error)
     );
 
+    // Interceptor de resposta simplificado - não tenta refresh automático
     const responseInterceptor = api.interceptors.response.use(
       (response) => response,
-      async (error) => {
-        const originalRequest = error.config;
-        // Se o erro for 401 e não for a rota de login/refresh, e não for uma requisição já retentada
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true;
-          // Se o token de acesso expirou, mas não há refresh token ou o refresh falhou, desloga
+      (error) => {
+        // Se for erro 401 na rota de refresh, desloga
+        if (error.response?.status === 401 && error.config?.url?.includes('/auth/refresh')) {
           clearAuthData();
-          window.location.href = '/login';
         }
         return Promise.reject(error);
       }
@@ -94,6 +73,27 @@ export const AuthProvider = ({ children }) => {
       api.interceptors.response.eject(responseInterceptor);
     };
   }, [clearAuthData]);
+
+  useEffect(() => {
+    const loadUser = () => {
+      try {
+        const storedUser = localStorage.getItem('user');
+        const accessToken = localStorage.getItem('access_token');
+        if (storedUser && accessToken) {
+          setUser(JSON.parse(storedUser));
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar usuário do localStorage:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUser();
+  }, []);
 
   const login = async (email, senha) => {
     try {
@@ -129,26 +129,77 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await api.post('/auth/logout');
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('Erro no endpoint de logout, mas deslogando localmente:', error);
     } finally {
       clearAuthData();
-      window.location.href = '/login';
+    }
+  }, [clearAuthData]);
+
+  // Função para tentar renovar o token manualmente quando necessário
+  const refreshAccessToken = async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      clearAuthData();
+      return null;
+    }
+
+    try {
+      const response = await axios.post(`${API_URL}/auth/refresh`, { 
+        refresh_token: refreshToken 
+      });
+      const { access_token } = response.data;
+      localStorage.setItem('access_token', access_token);
+      return access_token;
+    } catch (error) {
+      console.error('Falha ao renovar token de acesso:', error);
+      clearAuthData();
+      return null;
     }
   };
 
   const atualizarPerfil = async (dadosAtualizados) => {
     try {
+      // Primeira tentativa com o token atual
       const { data } = await api.put('/perfil', dadosAtualizados);
       const { user: userData } = data;
+      
+      // Atualiza o usuário no localStorage e no estado
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
+      
       return { success: true, user: userData };
     } catch (error) {
-      const message = error.response?.data?.message || 'Erro ao atualizar perfil';
+      // Se for erro 401, tenta renovar o token e fazer nova tentativa
+      if (error.response?.status === 401) {
+        console.log('Token expirado, tentando renovar...');
+        
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          try {
+            // Segunda tentativa com o novo token
+            const { data } = await api.put('/perfil', dadosAtualizados);
+            const { user: userData } = data;
+            
+            localStorage.setItem('user', JSON.stringify(userData));
+            setUser(userData);
+            
+            return { success: true, user: userData };
+          } catch (retryError) {
+            console.error("Erro na segunda tentativa:", retryError);
+            const message = retryError.response?.data?.message || 'Erro ao atualizar perfil após renovação do token.';
+            return { success: false, message };
+          }
+        } else {
+          return { success: false, message: 'Sessão expirada. Faça login novamente.' };
+        }
+      }
+      
+      console.error("Erro ao atualizar perfil:", error.response?.data || error.message);
+      const message = error.response?.data?.message || 'Erro ao atualizar perfil. Verifique os dados e tente novamente.';
       return { success: false, message };
     }
   };

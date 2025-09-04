@@ -13,6 +13,7 @@ import Agendamento from './components/Agendamento';
 import Suporte from './components/Suporte';
 import Perfil from './components/Perfil';
 import MinhasAvaliacoes from './components/MinhasAvaliacoes';
+import AvaliacoesRecebidas from './components/AvaliacoesRecebidas';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -78,6 +79,11 @@ const AppRoutes = () => {
       <Route path="/minhas-avaliacoes" element={
         <ProtectedRoute requiredUserType="aluno">
           <MinhasAvaliacoes />
+        </ProtectedRoute>
+      } />
+      <Route path="/avaliacoes-recebidas" element={
+        <ProtectedRoute requiredUserType="psicologo">
+          <AvaliacoesRecebidas />
         </ProtectedRoute>
       } />
       
