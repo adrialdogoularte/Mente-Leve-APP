@@ -28,7 +28,7 @@ const Perfil = () => {
     curso: user?.curso || '',
     periodo: user?.periodo || '',
     crp: user?.crp || '',
-    especialidade: user?.especialidade || ''
+    especialidades: Array.isArray(user?.especialidades) ? user.especialidades.join(', ') : (user?.especialidades || '')
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -68,7 +68,7 @@ const Perfil = () => {
         curso: user.curso || '',
         periodo: user.periodo || '',
         crp: user.crp || '',
-        especialidade: user.especialidade || ''
+        especialidades: Array.isArray(user.especialidades) ? user.especialidades.join(', ') : (user.especialidades || '')
       });
     }
   }, [user]);
@@ -116,7 +116,7 @@ const Perfil = () => {
         curso: user.curso || '',
         periodo: user.periodo || '',
         crp: user.crp || '',
-        especialidade: user.especialidade || ''
+        especialidades: Array.isArray(user.especialidades) ? user.especialidades.join(', ') : (user.especialidades || '')
       });
     }
   };
@@ -270,8 +270,8 @@ const Perfil = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Especialidades</label>
                         <input
                           type="text"
-                          value={dadosPerfil.especialidade}
-                          onChange={(e) => setDadosPerfil({...dadosPerfil, especialidade: e.target.value})}
+                          value={dadosPerfil.especialidades}
+                          onChange={(e) => setDadosPerfil({...dadosPerfil, especialidades: e.target.value})}
                           placeholder="Ex: Psicologia Clínica, Terapia Cognitivo-Comportamental"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
@@ -301,58 +301,81 @@ const Perfil = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div>
-                    <div className="text-sm text-gray-500">Nome</div>
-                    <div className="font-medium text-gray-900">{user.nome || 'Não informado'}</div>
+                  <div className="flex items-center space-x-3">
+                    <User className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <div className="text-sm text-gray-500">Nome</div>
+                      <div className="font-medium text-gray-900">{user.nome || 'Não informado'}</div>
+                    </div>
                   </div>
 
-                  <div>
-                    <div className="text-sm text-gray-500">Email</div>
-                    <div className="font-medium text-gray-900">{user.email || 'Não informado'}</div>
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <div className="text-sm text-gray-500">Email</div>
+                      <div className="font-medium text-gray-900">{user.email || 'Não informado'}</div>
+                    </div>
                   </div>
 
                   {user.tipo_usuario === 'aluno' && (
                     <>
-                      <div>
-                        <div className="text-sm text-gray-500">Universidade</div>
-                        <div className="font-medium text-gray-900">{user.universidade || 'Não informado'}</div>
+                      <div className="flex items-center space-x-3">
+                        <GraduationCap className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <div className="text-sm text-gray-500">Universidade</div>
+                          <div className="font-medium text-gray-900">{user.universidade || 'Não informado'}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-3">
+                        <BookOpen className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <div className="text-sm text-gray-500">Curso</div>
+                          <div className="font-medium text-gray-900">{user.curso || 'Não informado'}</div>
+                        </div>
                       </div>
 
                       <div>
-                        <div className="text-sm text-gray-500">Curso</div>
-                        <div className="font-medium text-gray-900">{user.curso || 'Não informado'}</div>
-                      </div>
-
-                      <div>
-                        <div className="text-sm text-gray-500">Período</div>
-                        <div className="font-medium text-gray-900">{user.periodo || 'Não informado'}</div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Período</label>
+                        <input
+                          type="text"
+                          value={dadosPerfil.periodo}
+                          onChange={(e) => setDadosPerfil({...dadosPerfil, periodo: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
                       </div>
                     </>
                   )}
 
                   {user.tipo_usuario === 'psicologo' && (
                     <>
-                      <div>
-                        <div className="text-sm text-gray-500">CRP</div>
-                        <div className="font-medium text-gray-900">{user.crp || 'Não informado'}</div>
+                      <div className="flex items-center space-x-3">
+                        <CheckCircle className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <div className="text-sm text-gray-500">CRP</div>
+                          <div className="font-medium text-gray-900">{user.crp || 'Não informado'}</div>
+                        </div>
                       </div>
 
-                      <div>
-                        <div className="text-sm text-gray-500">Especialidades</div>
-                        {user.especialidade ? (
-                          <div className="space-y-1">
-                            {formatarEspecialidades(user.especialidade).map((esp, index) => (
-                              <span
-                                key={index}
-                                className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1"
-                              >
-                                {esp}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="font-medium text-gray-500 italic">Não informado</div>
-                        )}
+                      <div className="flex items-start space-x-3">
+                        <Award className="h-5 w-5 text-gray-400 mt-1" />
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-500 mb-2">Especialidades</div>
+                          {user.especialidades && Array.isArray(user.especialidades) && user.especialidades.length > 0 ? (
+                            <div className="space-y-1">
+                              {user.especialidades.map((esp, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1"
+                                >
+                                  {esp}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="font-medium text-gray-500 italic">Não informado</div>
+                          )}
+                        </div>
                       </div>
                     </>
                   )}

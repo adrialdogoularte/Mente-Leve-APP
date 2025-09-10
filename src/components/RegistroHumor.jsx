@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, TrendingUp, Calendar, Zap, Save, AlertCircle } from 'lucide-react';
+import { Plus, TrendingUp, Calendar, Zap, Save, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 
 const RegistroHumor = () => {
-  const { api } = useAuth();
+  const { api, user } = useAuth();
+  const navigate = useNavigate();
   const [selectedMood, setSelectedMood] = useState(null);
   const [notes, setNotes] = useState('');
   const [emocoes, setEmocoes] = useState([]);
@@ -25,6 +27,7 @@ const RegistroHumor = () => {
     emocoes_frequentes: [],
     fatores_frequentes: []
   });
+  const [pageLoading, setPageLoading] = useState(true);
 
   const moods = [
     { id: 1, emoji: '😢', label: 'Muito Ruim', color: 'bg-red-100 border-red-300 text-red-700' },
@@ -50,25 +53,52 @@ const RegistroHumor = () => {
   ];
 
   useEffect(() => {
-    carregarHistorico();
-    carregarEstatisticas();
+    const initializePage = async () => {
+      try {
+        setPageLoading(true);
+        await Promise.all([
+          carregarHistorico(),
+          carregarEstatisticas()
+        ]);
+      } catch (error) {
+        console.error('Erro ao inicializar página:', error);
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    initializePage();
   }, []);
 
   const carregarHistorico = async () => {
     try {
       const response = await api.get('/humor?limite=10');
-      setMoodHistory(response.data.registros);
+      setMoodHistory(response.data?.registros || []);
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
+      // Usar dados fictícios se a API falhar
+      setMoodHistory([]);
     }
   };
 
   const carregarEstatisticas = async () => {
     try {
       const response = await api.get('/humor/estatisticas');
-      setStats(response.data);
+      setStats(response.data || {
+        total_registros: 0,
+        media_humor: 0,
+        emocoes_frequentes: [],
+        fatores_frequentes: []
+      });
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
+      // Usar dados padrão se a API falhar
+      setStats({
+        total_registros: 0,
+        media_humor: 0,
+        emocoes_frequentes: [],
+        fatores_frequentes: []
+      });
     }
   };
 
@@ -140,10 +170,13 @@ const RegistroHumor = () => {
       setDataRegistro(new Date().toISOString().split('T')[0]);
       
       // Recarregar dados
-      carregarHistorico();
-      carregarEstatisticas();
+      await Promise.all([
+        carregarHistorico(),
+        carregarEstatisticas()
+      ]);
       
     } catch (error) {
+      console.error('Erro ao salvar registro:', error);
       setError(error.response?.data?.message || 'Erro ao salvar registro');
     } finally {
       setLoading(false);
@@ -151,14 +184,57 @@ const RegistroHumor = () => {
   };
 
   const formatarData = (dataString) => {
-    const data = new Date(dataString);
-    return data.toLocaleDateString('pt-BR');
+    try {
+      const data = new Date(dataString);
+      return data.toLocaleDateString('pt-BR');
+    } catch (error) {
+      return dataString;
+    }
   };
 
   const obterEmojiHumor = (nivel) => {
     const mood = moods.find(m => m.id === nivel);
     return mood ? mood.emoji : '😐';
   };
+
+  // Loading inicial da página
+  if (pageLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando registro de humor...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Verificar se o usuário é aluno
+  if (!user || user.tipo_usuario !== 'aluno') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Acesso Restrito</h2>
+            <p className="text-gray-600 mb-4">Esta funcionalidade é exclusiva para alunos.</p>
+            <button
+              onClick={() => navigate('/')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Voltar ao Início
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -167,7 +243,15 @@ const RegistroHumor = () => {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Registro de Humor</h1>
+          <div className="flex items-center justify-center mb-4">
+            <button
+              onClick={() => navigate('/perfil')}
+              className="mr-4 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h1 className="text-3xl font-bold text-gray-900">Registro de Humor</h1>
+          </div>
           <p className="text-gray-600">Acompanhe seu bem-estar emocional diariamente</p>
         </div>
 
@@ -399,17 +483,17 @@ const RegistroHumor = () => {
                     <TrendingUp className="h-5 w-5 text-green-600" />
                     <span className="text-sm text-gray-600">Humor médio</span>
                   </div>
-                  <span className="font-semibold text-gray-900">{stats.media_humor.toFixed(1)}</span>
+                  <span className="font-semibold text-gray-900">{stats.media_humor ? stats.media_humor.toFixed(1) : '0.0'}</span>
                 </div>
 
-                {stats.emocoes_frequentes.length > 0 && (
+                {stats.emocoes_frequentes && stats.emocoes_frequentes.length > 0 && (
                   <div>
                     <span className="text-sm text-gray-600 block mb-2">Emoções frequentes</span>
                     <div className="space-y-1">
                       {stats.emocoes_frequentes.slice(0, 3).map(([emocao, count]) => (
                         <div key={emocao} className="flex justify-between text-sm">
                           <span className="text-gray-700">{emocao}</span>
-                          <span className="text-gray-500">{count}x</span>
+                          <span className="text-gray-500">{count}</span>
                         </div>
                       ))}
                     </div>
@@ -420,40 +504,46 @@ const RegistroHumor = () => {
 
             {/* Histórico Recente */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Histórico Recente</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Registros Recentes</h3>
               
-              <div className="space-y-3">
-                {moodHistory.length > 0 ? (
-                  moodHistory.slice(0, 5).map((registro) => (
-                    <div key={registro.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="text-2xl">{obterEmojiHumor(registro.nivel_humor)}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900">
-                          {formatarData(registro.data_registro)}
-                        </div>
-                        {registro.descricao && (
-                          <div className="text-xs text-gray-500 truncate">
-                            {registro.descricao}
+              {moodHistory.length > 0 ? (
+                <div className="space-y-3">
+                  {moodHistory.slice(0, 5).map((registro) => (
+                    <div key={registro.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-xl">{obterEmojiHumor(registro.nivel_humor)}</span>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {formatarData(registro.data_registro)}
                           </div>
-                        )}
+                          {registro.descricao && (
+                            <div className="text-xs text-gray-500 truncate max-w-32">
+                              {registro.descricao}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {registro.nivel_humor}/5
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    Nenhum registro ainda. Comece registrando seu humor hoje!
-                  </p>
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <Zap className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">Nenhum registro ainda</p>
+                  <p className="text-xs text-gray-400">Comece registrando seu humor hoje!</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </main>
-
+      
       <Footer />
     </div>
   );
 };
 
 export default RegistroHumor;
-
