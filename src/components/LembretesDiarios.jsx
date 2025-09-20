@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import notificationManager from '../utils/notifications';
 
 const LembretesDiarios = () => {
   const { api } = useAuth();
@@ -20,6 +21,48 @@ const LembretesDiarios = () => {
     carregarStatus();
     carregarSugestoes();
   }, []);
+
+  useEffect(() => {
+    const handleNotifications = async () => {
+      if (configuracao.ativo) {
+        const permissionGranted = await notificationManager.requestPermission();
+        if (permissionGranted) {
+          // Reagendar notificações se o lembrete estiver ativo e a permissão concedida
+          const now = new Date();
+          const [hours, minutes] = configuracao.horario.split(":");
+          const today = new Date();
+          today.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+          if (today > now) {
+            notificationManager.scheduleNotification(
+              "lembrete-diario-hoje",
+              "🧠 Mente Leve - Lembrete",
+              "Não se esqueça de registrar seu humor hoje!",
+              today
+            );
+          }
+
+          const tomorrow = new Date(today);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+
+          notificationManager.scheduleNotification(
+            "lembrete-diario-amanha",
+            "🧠 Mente Leve - Lembrete",
+            "Não se esqueça de registrar seu humor hoje!",
+            tomorrow
+          );
+        } else {
+          setMessage("As notificações não foram permitidas pelo navegador.");
+        }
+      } else {
+        // Cancelar notificações se o lembrete for desativado
+        notificationManager.cancelScheduledNotification("lembrete-diario-hoje");
+        notificationManager.cancelScheduledNotification("lembrete-diario-amanha");
+      }
+    };
+
+    handleNotifications();
+  }, [configuracao.ativo, configuracao.horario]);
 
   const carregarStatus = async () => {
     try {
@@ -55,7 +98,13 @@ const LembretesDiarios = () => {
     
     try {
       await api.post('/lembretes/configurar', configuracao);
-      setMessage('Configuração salva com sucesso!');
+      
+      if (configuracao.ativo) {
+        setMessage('Configuração salva e notificações agendadas com sucesso!');
+      } else {
+        setMessage('Configuração salva e notificações canceladas!');
+      }
+      
       await carregarStatus();
     } catch (error) {
       setMessage('Erro ao salvar configuração');
@@ -143,6 +192,25 @@ const LembretesDiarios = () => {
                 onChange={(e) => alterarHorario(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+              
+              {/* Informações sobre notificações */}
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start">
+                  <Bell className="h-4 w-4 text-blue-500 mr-2 mt-0.5" />
+                  <div className="text-sm text-blue-700">
+                    <p className="font-medium mb-1">Como funcionam as notificações:</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li>Você receberá uma notificação no horário configurado</li>
+                      <li>As notificações funcionam apenas com o navegador aberto</li>
+                      <li>Você pode permitir ou bloquear notificações nas configurações do navegador</li>
+                      <li>Status atual: {notificationManager.isNotificationSupported() 
+                        ? (Notification.permission === 'granted' ? '✅ Notificações permitidas' : '⚠️ Permissão necessária')
+                        : '❌ Notificações não suportadas'
+                      }</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -184,4 +252,5 @@ const LembretesDiarios = () => {
 };
 
 export default LembretesDiarios;
+
 
