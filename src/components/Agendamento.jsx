@@ -12,13 +12,47 @@ const Agendamento = () => {
   const [notes, setNotes] = useState('');
   const [psychologists, setPsychologists] = useState([]);
   const [myAppointments, setMyAppointments] = useState([]);
+  const [availableTimes, setAvailableTimes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Dados estáticos para horários e modalidades (podem vir do backend no futuro)
-  const timeSlots = [
-    '08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'
-  ];
+  // Função para calcular horários disponíveis baseados na disponibilidade do psicólogo e data selecionada
+  const calculateAvailableTimes = async () => {
+    if (!selectedPsychologist || !selectedDate) {
+      setAvailableTimes([]);
+      return;
+    }
+
+    try {
+      // Obter o dia da semana da data selecionada
+      const date = new Date(selectedDate + 'T00:00:00');
+      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      
+      // Verificar se o psicólogo tem disponibilidade para este dia
+      const psychologistAvailability = selectedPsychologist.availability || {};
+      const dayAvailability = psychologistAvailability[dayOfWeek] || [];
+      
+      if (dayAvailability.length === 0) {
+        setAvailableTimes([]);
+        return;
+      }
+
+      // Buscar agendamentos existentes para este psicólogo nesta data
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        setAvailableTimes(dayAvailability);
+        return;
+      }
+
+      // Aqui você pode fazer uma requisição para buscar agendamentos existentes
+      // Por enquanto, vamos usar apenas a disponibilidade do psicólogo
+      setAvailableTimes(dayAvailability);
+      
+    } catch (error) {
+      console.error('Erro ao calcular horários disponíveis:', error);
+      setAvailableTimes([]);
+    }
+  };
 
   const attendanceModes = [
     {
@@ -76,13 +110,25 @@ const Agendamento = () => {
     fetchMyAppointments();
   }, []);
 
+  // Recalcular horários disponíveis quando a data ou psicólogo mudar
+  useEffect(() => {
+    calculateAvailableTimes();
+  }, [selectedDate, selectedPsychologist]);
+
   const handlePsychologistSelect = (psychologist) => {
     setSelectedPsychologist(psychologist);
     setSelectedMode(''); // Reset mode selection when changing psychologist
+    setSelectedTime(''); // Reset time selection when changing psychologist
+    calculateAvailableTimes(); // Recalcular horários disponíveis
   };
 
   const handleModeSelect = (mode) => {
     setSelectedMode(mode);
+  };
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    setSelectedTime(''); // Reset time selection when changing date
   };
 
   const handleSubmit = async () => {
@@ -273,7 +319,7 @@ const Agendamento = () => {
                   <input
                     type="date"
                     value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
+                    onChange={(e) => handleDateChange(e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -288,9 +334,17 @@ const Agendamento = () => {
                     value={selectedTime}
                     onChange={(e) => setSelectedTime(e.target.value)}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={!selectedPsychologist || !selectedDate}
                   >
-                    <option value="">Selecione um horário</option>
-                    {timeSlots.map((time) => (
+                    <option value="">
+                      {!selectedPsychologist || !selectedDate 
+                        ? "Selecione um psicólogo e data primeiro" 
+                        : availableTimes.length === 0 
+                          ? "Nenhum horário disponível para esta data"
+                          : "Selecione um horário"
+                      }
+                    </option>
+                    {availableTimes.map((time) => (
                       <option key={time} value={time}>{time}</option>
                     ))}
                   </select>

@@ -14,6 +14,235 @@ const moods = [
   { id: 5, label: 'Muito Bom', emoji: '😀' },
 ];
 
+// Componente para gerenciar a disponibilidade do psicólogo
+const DisponibilidadePsicologo = ({ user, api }) => {
+  const [disponibilidade, setDisponibilidade] = useState({});
+  const [editandoDisponibilidade, setEditandoDisponibilidade] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // Carregar disponibilidade do usuário quando o componente montar ou o usuário mudar
+  useEffect(() => {
+    if (user?.disponibilidade) {
+      setDisponibilidade(user.disponibilidade);
+    } else {
+      // Se não há disponibilidade no user, buscar do backend
+      fetchDisponibilidade();
+    }
+  }, [user]);
+
+  const fetchDisponibilidade = async () => {
+    try {
+      const response = await api.get('/auth/me');
+      if (response.data?.disponibilidade) {
+        setDisponibilidade(response.data.disponibilidade);
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar disponibilidade:', error);
+    }
+  };
+
+  const diasSemana = [
+    { id: 'monday', label: 'Segunda-feira' },
+    { id: 'tuesday', label: 'Terça-feira' },
+    { id: 'wednesday', label: 'Quarta-feira' },
+    { id: 'thursday', label: 'Quinta-feira' },
+    { id: 'friday', label: 'Sexta-feira' },
+    { id: 'saturday', label: 'Sábado' },
+    { id: 'sunday', label: 'Domingo' }
+  ];
+
+  const horariosDisponiveis = [
+    '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
+    '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
+  ];
+
+  const handleToggleHorario = (dia, horario) => {
+    setDisponibilidade(prev => {
+      const novaDisponibilidade = { ...prev };
+      if (!novaDisponibilidade[dia]) {
+        novaDisponibilidade[dia] = [];
+      }
+      
+      if (novaDisponibilidade[dia].includes(horario)) {
+        novaDisponibilidade[dia] = novaDisponibilidade[dia].filter(h => h !== horario);
+      } else {
+        novaDisponibilidade[dia] = [...novaDisponibilidade[dia], horario].sort();
+      }
+      
+      // Remove o dia se não há horários
+      if (novaDisponibilidade[dia].length === 0) {
+        delete novaDisponibilidade[dia];
+      }
+      
+      return novaDisponibilidade;
+    });
+  };
+
+  const handleSalvarDisponibilidade = async () => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await api.put('/auth/psicologo/disponibilidade', {
+        disponibilidade
+      });
+
+      if (response.status === 200) {
+        setSuccess('Disponibilidade atualizada com sucesso!');
+        setEditandoDisponibilidade(false);
+        
+        // Atualizar os dados do usuário no contexto para refletir a mudança
+        try {
+          const updatedUserResponse = await api.get('/auth/me');
+          if (updatedUserResponse.data) {
+            // Se houver uma função para atualizar o contexto do usuário, chame-a aqui
+            // Por exemplo: updateUser(updatedUserResponse.data);
+          }
+        } catch (updateError) {
+          console.warn('Erro ao atualizar dados do usuário:', updateError);
+        }
+        
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar disponibilidade:', error);
+      setError('Erro ao atualizar disponibilidade. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelarEdicao = () => {
+    setEditandoDisponibilidade(false);
+    // Restaurar a disponibilidade original
+    if (user?.disponibilidade) {
+      setDisponibilidade(user.disponibilidade);
+    } else {
+      fetchDisponibilidade(); // Recarregar do backend se necessário
+    }
+    setError('');
+    setSuccess('');
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <Clock className="h-6 w-6 text-blue-600" />
+          <h2 className="text-xl font-semibold text-gray-900">Disponibilidade de Atendimento</h2>
+        </div>
+        {!editandoDisponibilidade && (
+          <button
+            onClick={() => setEditandoDisponibilidade(true)}
+            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <Edit className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      {/* Mensagens */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+          <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+          <span className="text-red-700 text-sm">{error}</span>
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+          <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+          <span className="text-green-700 text-sm">{success}</span>
+        </div>
+      )}
+
+      {editandoDisponibilidade ? (
+        <div className="space-y-6">
+          <p className="text-sm text-gray-600">
+            Selecione os dias da semana e horários em que você está disponível para atendimento.
+          </p>
+          
+          {diasSemana.map(dia => (
+            <div key={dia.id} className="border border-gray-200 rounded-lg p-4">
+              <h3 className="font-medium text-gray-900 mb-3">{dia.label}</h3>
+              <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                {horariosDisponiveis.map(horario => (
+                  <button
+                    key={horario}
+                    onClick={() => handleToggleHorario(dia.id, horario)}
+                    className={`p-2 text-sm rounded-lg border transition-colors ${
+                      disponibilidade[dia.id]?.includes(horario)
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {horario}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          <div className="flex space-x-3 pt-4">
+            <button
+              onClick={handleSalvarDisponibilidade}
+              disabled={loading}
+              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Save className="h-4 w-4" />
+              <span>{loading ? 'Salvando...' : 'Salvar Disponibilidade'}</span>
+            </button>
+            <button
+              onClick={handleCancelarEdicao}
+              disabled={loading}
+              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <X className="h-4 w-4" />
+              <span>Cancelar</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {Object.keys(disponibilidade).length > 0 ? (
+            diasSemana.map(dia => {
+              const horariosDoDia = disponibilidade[dia.id];
+              if (!horariosDoDia || horariosDoDia.length === 0) return null;
+              
+              return (
+                <div key={dia.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="font-medium text-gray-900">{dia.label}</span>
+                  <div className="flex flex-wrap gap-1">
+                    {horariosDoDia.map(horario => (
+                      <span
+                        key={horario}
+                        className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                      >
+                        {horario}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-8">
+              <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma disponibilidade configurada</h3>
+              <p className="text-gray-500 mb-4">
+                Configure seus horários de atendimento para que os alunos possam agendar consultas
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Perfil = () => {
   const { user, api, atualizarPerfil } = useAuth();
   const [registrosHumor, setRegistrosHumor] = useState([]);
@@ -329,14 +558,12 @@ const Perfil = () => {
                         </div>
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Período</label>
-                        <input
-                          type="text"
-                          value={dadosPerfil.periodo}
-                          onChange={(e) => setDadosPerfil({...dadosPerfil, periodo: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
+                      <div className="flex items-center space-x-3">
+                        <Clock className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <div className="text-sm text-gray-500">Período</div>
+                          <div className="font-medium text-gray-900">{user.periodo || 'Não informado'}</div>
+                        </div>
                       </div>
                     </>
                   )}
@@ -375,106 +602,47 @@ const Perfil = () => {
                   )}
                 </div>
               )}
-
-              {/* Estatísticas de Humor - apenas para alunos */}
-              {user.tipo_usuario === 'aluno' && Object.keys(estatisticasHumor).length > 0 && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Estatísticas de Humor</h3>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <BarChart3 className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm text-gray-600">Total de registros</span>
-                      </div>
-                      <span className="font-semibold text-gray-900">{estatisticasHumor.total_registros}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <TrendingUp className="h-4 w-4 text-green-600" />
-                        <span className="text-sm text-gray-600">Humor médio</span>
-                      </div>
-                      <span className="font-semibold text-gray-900">{estatisticasHumor.media_humor?.toFixed(1)}</span>
-                    </div>
-
-                    {estatisticasHumor.emocoes_frequentes?.length > 0 && (
-                      <div>
-                        <div className="text-sm text-gray-600 mb-2">Emoções mais frequentes</div>
-                        <div className="flex flex-wrap gap-1">
-                          {estatisticasHumor.emocoes_frequentes.slice(0, 3).map((emocao, index) => (
-                            <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                              {emocao}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Conteúdo Principal */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Registros de Humor Recentes - apenas para alunos */}
-            {user.tipo_usuario === 'aluno' && registrosHumor.length > 0 && (
+          {/* Conteúdo Principal (Humor para Alunos ou Disponibilidade para Psicólogos) */}
+          <div className="lg:col-span-2">
+            {user.tipo_usuario === 'aluno' ? (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center space-x-3">
-                    <Heart className="h-6 w-6 text-pink-600" />
-                    <h2 className="text-xl font-semibold text-gray-900">Registros de Humor Recentes</h2>
-                  </div>
-                  <span className="text-sm text-gray-500">Últimos {Math.min(registrosHumor.length, 10)} registros</span>
+                <div className="flex items-center space-x-3 mb-6">
+                  <Heart className="h-6 w-6 text-red-500" />
+                  <h2 className="text-xl font-semibold text-gray-900">Registro de Humor</h2>
                 </div>
 
-                <div className="space-y-3">
-                  {registrosHumor.slice(0, 10).map((registro, index) => (
-                    <div key={registro.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-2xl">{moods.find(m => m.id === registro.nivel_humor)?.emoji}</span>
-                        <div>
-                          <p className="text-sm font-medium text-gray-800">{moods.find(m => m.id === registro.nivel_humor)?.label}</p>
-                          <p className="text-xs text-gray-500">{formatarData(registro.data_registro)}</p>
+                {registrosHumor.length > 0 ? (
+                  <div className="space-y-4">
+                    {registrosHumor.map(registro => (
+                      <div key={registro.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl">{moods.find(m => m.id === registro.nivel_humor)?.emoji}</span>
+                          <div>
+                            <div className="font-medium text-gray-900">{moods.find(m => m.id === registro.nivel_humor)?.label}</div>
+                            <div className="text-sm text-gray-500">{formatarData(registro.data_criacao)}</div>
+                          </div>
                         </div>
+                        {registro.anotacoes && (
+                          <p className="text-sm text-gray-600 italic">"{registro.anotacoes}"</p>
+                        )}
                       </div>
-                      {registro.descricao && (
-                        <span className="text-xs text-gray-500 truncate max-w-[200px]">{registro.descricao}</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Mensagem para quando não há registros de humor - apenas para alunos */}
-            {user.tipo_usuario === 'aluno' && registrosHumor.length === 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="text-center py-8">
-                  <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum registro de humor encontrado</h3>
-                  <p className="text-gray-500 mb-4">Comece a registrar seu humor diário para acompanhar seu bem-estar</p>
-                </div>
-              </div>
-            )}
-
-            {/* Informações adicionais para psicólogos */}
-            {user.tipo_usuario === 'psicologo' && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="text-center py-8">
-                  <Award className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Perfil Profissional</h3>
-                  <p className="text-gray-500 mb-4">
-                    Mantenha suas informações profissionais atualizadas para oferecer o melhor atendimento aos seus pacientes
-                  </p>
-                  {!user.especialidade && (
-                    <p className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
-                      Complete suas especialidades para que os alunos possam encontrá-lo mais facilmente
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum registro de humor</h3>
+                    <p className="text-gray-500 mb-4">
+                      Comece a registrar seu humor para acompanhar seu bem-estar
                     </p>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
+            ) : (
+              <DisponibilidadePsicologo user={user} api={api} />
             )}
           </div>
         </div>
