@@ -169,7 +169,7 @@ const AgendamentoAluno = () => {
       setNotes('');
     } catch (err) {
       console.error('Erro ao solicitar agendamento:', err);
-      alert('Erro ao solicitar agendamento. Tente novamente.');
+      alert('Horário indisponível. Tente outro horário.');
     }
   };
 
