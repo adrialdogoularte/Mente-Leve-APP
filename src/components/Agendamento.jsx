@@ -1,87 +1,147 @@
-import React, { useState } from 'react';
-import { Calendar, Clock, User, CheckCircle, AlertCircle, Send } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Clock, User, CheckCircle, AlertCircle, Send, Monitor, MapPin } from 'lucide-react';
+import axios from 'axios'; // Importar axios para fazer requisições HTTP
+
+const API_BASE_URL = 'http://localhost:5000/api'; // Ajuste conforme a URL do seu backend
 
 const Agendamento = () => {
   const [selectedPsychologist, setSelectedPsychologist] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
+  const [selectedMode, setSelectedMode] = useState('');
   const [notes, setNotes] = useState('');
+  const [psychologists, setPsychologists] = useState([]);
+  const [myAppointments, setMyAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const psychologists = [
-    {
-      id: 1,
-      name: 'Dra. Ana Silva',
-      specialty: 'Ansiedade e Estresse Acadêmico',
-      availability: 'Segunda, Terça, Quinta, Sexta',
-      description: 'Especialista em ansiedade e estresse acadêmico com mais de 8 anos de experiência.'
-    },
-    {
-      id: 2,
-      name: 'Dr. Carlos Santos',
-      specialty: 'Depressão e Autoestima',
-      availability: 'Terça, Quinta',
-      description: 'Psicólogo clínico especializado em depressão e questões de autoestima.'
-    },
-    {
-      id: 3,
-      name: 'Dra. Maria Oliveira',
-      specialty: 'Relacionamentos e Habilidades Sociais',
-      availability: 'Segunda, Terça, Quinta, Quinta, Sexta',
-      description: 'Especialista em terapia de relacionamentos e desenvolvimento de habilidades sociais.'
-    },
-    {
-      id: 4,
-      name: 'Dr. João Costa',
-      specialty: 'Transtornos do Sono e Bem-estar',
-      availability: 'Quarta, Sexta, Sábado',
-      description: 'Psicólogo especializado em transtornos do sono e promoção do bem-estar geral.'
-    }
-  ];
-
-  const myAppointments = [
-    {
-      id: 1,
-      psychologist: 'Dra. Ana Silva',
-      specialty: 'Ansiedade e Estresse Acadêmico',
-      date: '24/01/2024',
-      time: '14:00',
-      status: 'Confirmado',
-      notes: 'Primeira consulta'
-    },
-    {
-      id: 2,
-      psychologist: 'Dr. Carlos Santos',
-      specialty: 'Depressão e Autoestima',
-      date: '23/01/2024',
-      time: '10:00',
-      status: 'Pendente',
-      notes: 'Questões de autoestima'
-    }
-  ];
-
+  // Dados estáticos para horários e modalidades (podem vir do backend no futuro)
   const timeSlots = [
     '08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'
   ];
 
-  const handlePsychologistSelect = (psychologist) => {
-    setSelectedPsychologist(psychologist);
+  const attendanceModes = [
+    {
+      id: 'online',
+      label: 'Online',
+      description: 'Consulta por videochamada',
+      icon: Monitor,
+      color: 'blue'
+    },
+    {
+      id: 'presencial',
+      label: 'Presencial',
+      description: 'Consulta no consultório',
+      icon: MapPin,
+      color: 'green'
+    }
+  ];
+
+  // Função para buscar psicólogos do backend
+  const fetchPsychologists = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/psicologos`);
+      setPsychologists(response.data);
+    } catch (err) {
+      console.error('Erro ao buscar psicólogos:', err);
+      setError('Não foi possível carregar a lista de psicólogos.');
+    }
   };
 
-  const handleSubmit = () => {
-    if (selectedPsychologist && selectedDate && selectedTime) {
-      console.log('Agendamento solicitado:', {
-        psychologist: selectedPsychologist,
-        date: selectedDate,
-        time: selectedTime,
-        notes
+  // Função para buscar meus agendamentos do backend
+  const fetchMyAppointments = async () => {
+    try {
+      const token = localStorage.getItem('access_token'); // Assumindo que o token JWT está no localStorage
+      if (!token) {
+        console.warn('Token de acesso não encontrado. Não foi possível carregar agendamentos.');
+        setLoading(false);
+        return;
+      }
+      const response = await axios.get(`${API_BASE_URL}/agendamentos/meus`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-      // Reset form
+      setMyAppointments(response.data);
+    } catch (err) {
+      console.error('Erro ao buscar meus agendamentos:', err);
+      setError('Não foi possível carregar seus agendamentos.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPsychologists();
+    fetchMyAppointments();
+  }, []);
+
+  const handlePsychologistSelect = (psychologist) => {
+    setSelectedPsychologist(psychologist);
+    setSelectedMode(''); // Reset mode selection when changing psychologist
+  };
+
+  const handleModeSelect = (mode) => {
+    setSelectedMode(mode);
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedPsychologist || !selectedDate || !selectedTime || !selectedMode) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        alert('Você precisa estar logado para agendar.');
+        return;
+      }
+
+      const appointmentData = {
+        psicologo_id: selectedPsychologist.id,
+        data_agendamento: selectedDate,
+        hora_agendamento: selectedTime,
+        modalidade: selectedMode,
+        notas: notes,
+      };
+
+      await axios.post(`${API_BASE_URL}/agendamentos`, appointmentData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      alert('Agendamento solicitado com sucesso!');
+      // Atualizar a lista de agendamentos após o sucesso
+      fetchMyAppointments();
+      // Resetar o formulário
       setSelectedPsychologist(null);
       setSelectedDate('');
       setSelectedTime('');
+      setSelectedMode('');
       setNotes('');
+    } catch (err) {
+      console.error('Erro ao solicitar agendamento:', err);
+      alert('Erro ao solicitar agendamento. Tente novamente.');
     }
   };
+
+  // Filter available modes based on selected psychologist
+  const getAvailableModes = () => {
+    if (!selectedPsychologist) return [];
+    return attendanceModes.filter(mode => 
+      selectedPsychologist.modes.includes(mode.id)
+    );
+  };
+
+  if (loading) {
+    return <div className="text-center py-8">Carregando agendamentos e psicólogos...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-500">Erro: {error}</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -114,33 +174,95 @@ const Agendamento = () => {
                   Selecione um psicólogo: *
                 </label>
                 <div className="space-y-3">
-                  {psychologists.map((psychologist) => (
-                    <div
-                      key={psychologist.id}
-                      onClick={() => handlePsychologistSelect(psychologist)}
-                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        selectedPsychologist?.id === psychologist.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <div className="bg-blue-100 p-2 rounded-full">
-                          <User className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900">{psychologist.name}</h3>
-                          <p className="text-sm text-blue-600 mb-1">{psychologist.specialty}</p>
-                          <p className="text-xs text-gray-600 mb-2">
-                            Disponível: {psychologist.availability}
-                          </p>
-                          <p className="text-sm text-gray-600">{psychologist.description}</p>
+                  {psychologists.length > 0 ? (
+                    psychologists.map((psychologist) => (
+                      <div
+                        key={psychologist.id}
+                        onClick={() => handlePsychologistSelect(psychologist)}
+                        className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                          selectedPsychologist?.id === psychologist.id
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-blue-100 p-2 rounded-full">
+                            <User className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900">{psychologist.name}</h3>
+                            <p className="text-sm text-blue-600 mb-1">{psychologist.specialty}</p>
+                            {/* <p className="text-xs text-gray-600 mb-2">
+                              Disponível: {psychologist.availability}
+                            </p> */}
+                            {/* <p className="text-sm text-gray-600 mb-2">{psychologist.description}</p> */}
+                            <div className="flex items-center space-x-2 mt-2">
+                              <span className="text-xs text-gray-500">Modalidades:</span>
+                              {psychologist.modes && psychologist.modes.length > 0 ? (
+                                psychologist.modes.map((mode) => (
+                                  <span
+                                    key={mode}
+                                    className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                      mode === 'online'
+                                        ? 'bg-blue-100 text-blue-700'
+                                        : 'bg-green-100 text-green-700'
+                                    }`}
+                                  >
+                                    {mode === 'online' ? 'Online' : 'Presencial'}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-xs text-gray-500">Nenhuma</span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-gray-500">Nenhum psicólogo disponível no momento.</p>
+                  )}
                 </div>
               </div>
+
+              {/* Seleção de Modalidade de Atendimento */}
+              {selectedPsychologist && getAvailableModes().length > 0 && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Modalidade de atendimento: *
+                  </label>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {getAvailableModes().map((mode) => {
+                      const IconComponent = mode.icon;
+                      return (
+                        <div
+                          key={mode.id}
+                          onClick={() => handleModeSelect(mode.id)}
+                          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                            selectedMode === mode.id
+                              ? `border-${mode.color}-500 bg-${mode.color}-50`
+                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className={`p-2 rounded-full ${
+                              mode.color === 'blue' ? 'bg-blue-100' : 'bg-green-100'
+                            }`}>
+                              <IconComponent className={`h-5 w-5 ${
+                                mode.color === 'blue' ? 'text-blue-600' : 'text-green-600'
+                              }`} />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900">{mode.label}</h3>
+                              <p className="text-sm text-gray-600">{mode.description}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Data Preferida */}
               <div className="grid md:grid-cols-2 gap-4 mb-6">
@@ -192,9 +314,9 @@ const Agendamento = () => {
               {/* Submit Button */}
               <button
                 onClick={handleSubmit}
-                disabled={!selectedPsychologist || !selectedDate || !selectedTime}
+                disabled={!selectedPsychologist || !selectedDate || !selectedTime || !selectedMode}
                 className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
-                  selectedPsychologist && selectedDate && selectedTime
+                  selectedPsychologist && selectedDate && selectedTime && selectedMode
                     ? 'bg-blue-500 hover:bg-blue-600 text-white'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
@@ -218,32 +340,51 @@ const Agendamento = () => {
               </div>
 
               <div className="space-y-4">
-                {myAppointments.map((appointment) => (
-                  <div key={appointment.id} className="p-4 border border-gray-200 rounded-lg">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900">{appointment.psychologist}</h3>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        appointment.status === 'Confirmado'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {appointment.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">{appointment.specialty}</p>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{appointment.date}</span>
+                {myAppointments.length > 0 ? (
+                  myAppointments.map((appointment) => (
+                    <div key={appointment.id} className="p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-gray-900">{appointment.psicologo_nome}</h3>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          appointment.status === 'Confirmado'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {appointment.status}
+                        </span>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{appointment.time}</span>
+                      {/* <p className="text-sm text-gray-600 mb-2">{appointment.specialty}</p> */}
+                      <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>{appointment.data_agendamento}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-4 w-4" />
+                          <span>{appointment.hora_agendamento}</span>
+                        </div>
                       </div>
+                      {/* Nova seção para mostrar a modalidade */}
+                      <div className="flex items-center space-x-2 mb-2">
+                        {appointment.modalidade === 'online' ? (
+                          <Monitor className="h-4 w-4 text-blue-500" />
+                        ) : (
+                          <MapPin className="h-4 w-4 text-green-500" />
+                        )}
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          appointment.modalidade === 'online'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {appointment.modalidade === 'online' ? 'Online' : 'Presencial'}
+                        </span>
+                      </div>
+                      {appointment.notas && <p className="text-sm text-gray-600 italic">"{appointment.notas}"</p>}
                     </div>
-                    <p className="text-sm text-gray-600 italic">"{appointment.notes}"</p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-gray-500">Você não possui agendamentos futuros.</p>
+                )}
               </div>
             </div>
 
@@ -257,7 +398,7 @@ const Agendamento = () => {
               <div className="space-y-3 text-sm text-blue-800">
                 <div className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Selecione um psicólogo e horário de sua preferência</span>
+                  <span>Selecione um psicólogo, modalidade e horário de sua preferência</span>
                 </div>
                 <div className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
@@ -265,7 +406,11 @@ const Agendamento = () => {
                 </div>
                 <div className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>As consultas podem ser presenciais ou online</span>
+                  <span>Consultas online são realizadas por videochamada</span>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span>Consultas presenciais são no consultório do profissional</span>
                 </div>
                 <div className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
@@ -283,6 +428,7 @@ const Agendamento = () => {
                       <li>• Em emergências, procure ajuda imediatamente (CVV: 188)</li>
                       <li>• Seja pontual e respeite os horários agendados</li>
                       <li>• Cancele com antecedência se não puder comparecer</li>
+                      <li>• Para consultas online, teste sua conexão previamente</li>
                     </ul>
                   </div>
                 </div>
@@ -296,4 +442,3 @@ const Agendamento = () => {
 };
 
 export default Agendamento;
-

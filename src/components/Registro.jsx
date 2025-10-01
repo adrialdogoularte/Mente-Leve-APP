@@ -21,6 +21,7 @@ const Registro = () => {
     // Campos para psicólogo
     crp: '',
     especialidades: [],
+    modalidades_atendimento: [],
     biografia: ''
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -48,6 +49,11 @@ const Registro = () => {
     'Mindfulness e Meditação'
   ];
 
+  const modalidadesDisponiveis = [
+    { id: 'online', label: 'Online', description: 'Atendimento por videochamada' },
+    { id: 'presencial', label: 'Presencial', description: 'Atendimento no consultório' }
+  ];
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -72,6 +78,22 @@ const Registro = () => {
     }
   };
 
+  const handleModalidadeChange = (modalidade) => {
+    const modalidades = formData.modalidades_atendimento.includes(modalidade)
+      ? formData.modalidades_atendimento.filter(m => m !== modalidade)
+      : [...formData.modalidades_atendimento, modalidade];
+    
+    setFormData({
+      ...formData,
+      modalidades_atendimento: modalidades
+    });
+    
+    // Limpar erro quando modalidade for selecionada
+    if (modalidades.length > 0) {
+      setError('');
+    }
+  };
+
   const handleTipoUsuarioChange = (tipo) => {
     setTipoUsuario(tipo);
     // Limpar campos específicos ao mudar tipo
@@ -82,6 +104,7 @@ const Registro = () => {
       periodo: '',
       crp: '',
       especialidades: [],
+      modalidades_atendimento: [],
       biografia: ''
     });
     setError('');
@@ -110,6 +133,9 @@ const Registro = () => {
       }
       if (!formData.especialidades || formData.especialidades.length === 0) {
         return 'Pelo menos uma especialidade deve ser selecionada';
+      }
+      if (!formData.modalidades_atendimento || formData.modalidades_atendimento.length === 0) {
+        return 'Pelo menos uma modalidade de atendimento deve ser selecionada';
       }
     }
 
@@ -145,6 +171,7 @@ const Registro = () => {
         senha: formData.senha,
         crp: formData.crp,
         especialidades: formData.especialidades,
+        modalidades_atendimento: formData.modalidades_atendimento,
         biografia: formData.biografia
       });
     }
@@ -454,6 +481,36 @@ const Registro = () => {
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                         <span className="text-sm text-gray-700">{especialidade}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Modalidades de Atendimento */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Modalidades de Atendimento * (selecione pelo menos uma)
+                  </label>
+                  {formData.modalidades_atendimento.length > 0 && (
+                    <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-700">
+                        {formData.modalidades_atendimento.length} modalidade(s) selecionada(s)
+                      </p>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {modalidadesDisponiveis.map((modalidade) => (
+                      <label key={modalidade.id} className="flex items-start space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={formData.modalidades_atendimento.includes(modalidade.id)}
+                          onChange={() => handleModalidadeChange(modalidade.id)}
+                          className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div>
+                          <span className="text-sm font-medium text-gray-900">{modalidade.label}</span>
+                          <p className="text-xs text-gray-600">{modalidade.description}</p>
+                        </div>
                       </label>
                     ))}
                   </div>
