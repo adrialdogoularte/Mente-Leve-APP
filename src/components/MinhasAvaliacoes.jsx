@@ -37,37 +37,6 @@ const MinhasAvaliacoes = () => {
         setPsicologos(psicologosResponse.data.psicologos || []);
       } catch (psicError) {
         console.warn('Erro ao carregar psicólogos:', psicError);
-        // Lista de psicólogos fictícios para demonstração
-        setPsicologos([
-          { 
-            id: 1, 
-            nome: 'Dr. Ana Silva', 
-            especialidade: 'Psicologia Clínica', 
-            crp: '12345',
-            disponivel: true
-          },
-          { 
-            id: 2, 
-            nome: 'Dr. João Santos', 
-            especialidade: 'Psicologia Educacional', 
-            crp: '67890',
-            disponivel: false
-          },
-          { 
-            id: 3, 
-            nome: 'Dra. Maria Costa', 
-            especialidade: 'Psicologia Cognitiva', 
-            crp: '54321',
-            disponivel: true
-          },
-          { 
-            id: 4, 
-            nome: 'Dr. Carlos Oliveira', 
-            especialidade: 'Psicologia Comportamental', 
-            crp: '98765',
-            disponivel: false
-          }
-        ]);
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -329,13 +298,14 @@ const MinhasAvaliacoes = () => {
                         <span>Ver Detalhes</span>
                       </button>
                       
-                      <button
+                      {/* Botão de Compartilhar avaliação */}
+                      {/* <button
                         onClick={() => setShowCompartilhamento(avaliacao.id || index)}
                         className="inline-flex items-center space-x-1 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors"
                       >
                         <Share2 className="h-4 w-4" />
                         <span>Compartilhar</span>
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 </div>
@@ -423,7 +393,7 @@ const MinhasAvaliacoes = () => {
           </div>
         )}
 
-        {/* Modal de Compartilhamento */}
+        {/* Modal de Compartilhamento
         {showCompartilhamento !== null && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl max-w-md w-full">
@@ -489,7 +459,7 @@ const MinhasAvaliacoes = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </main>
       
     </div>

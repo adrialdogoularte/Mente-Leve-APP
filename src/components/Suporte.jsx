@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { href, Link } from 'react-router-dom';
 import { Phone, Mail, ExternalLink, AlertTriangle, Heart, Users, Calendar } from 'lucide-react';
 
 const Suporte = () => {
@@ -61,52 +61,6 @@ const Suporte = () => {
       ],
       contact: 'Contato via universidade',
       website: 'Mais informações'
-    }
-  ];
-
-  const onlineResources = [
-    {
-      name: 'Mapa da Saúde Mental',
-      description: 'Encontre profissionais de saúde mental na sua região',
-      website: 'Acessar plataforma'
-    },
-    {
-      name: 'Psicologia Viva',
-      description: 'Plataforma com psicólogos online',
-      website: 'Acessar plataforma'
-    },
-    {
-      name: 'Zenklub',
-      description: 'Terapia online e conteúdo sobre bem-estar',
-      website: 'Acessar plataforma'
-    },
-    {
-      name: 'Vittude',
-      description: 'Rede de psicólogos online e presenciais',
-      website: 'Acessar plataforma'
-    }
-  ];
-
-  const selfHelpApps = [
-    {
-      name: 'Headspace',
-      description: 'Meditação guiada e mindfulness',
-      features: ['Meditação diária', 'Exercícios de respiração', 'Histórias para dormir']
-    },
-    {
-      name: 'Calm',
-      description: 'Relaxamento e meditação para sono',
-      features: ['Mindfulness', 'Música relaxante', 'Programas de sono']
-    },
-    {
-      name: 'Insight Timer',
-      description: 'Maior biblioteca gratuita de meditações',
-      features: ['Meditações gratuitas', 'Timer personalizado', 'Comunidade global']
-    },
-    {
-      name: 'Sanvello',
-      description: 'Gerenciamento de ansiedade e humor',
-      features: ['Rastreamento de humor', 'Exercícios de ansiedade', 'Técnicas de enfrentamento']
     }
   ];
 
@@ -214,56 +168,6 @@ const Suporte = () => {
                     <ExternalLink className="h-4 w-4" />
                     <span>{service.website}</span>
                   </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Recursos Online */}
-        <section className="mb-12">
-          <div className="flex items-center space-x-2 mb-6">
-            <ExternalLink className="h-6 w-6 text-green-500" />
-            <h2 className="text-2xl font-bold text-gray-900">Recursos Online</h2>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-6">
-            {onlineResources.map((resource, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="font-semibold text-gray-900 mb-2">{resource.name}</h3>
-                <p className="text-sm text-gray-600 mb-4">{resource.description}</p>
-                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1">
-                  <ExternalLink className="h-4 w-4" />
-                  <span>{resource.website}</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Apps de Autoajuda */}
-        <section className="mb-12">
-          <div className="flex items-center space-x-2 mb-6">
-            <Heart className="h-6 w-6 text-purple-500" />
-            <h2 className="text-2xl font-bold text-gray-900">Apps de Autoajuda</h2>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-6">
-            {selfHelpApps.map((app, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="font-semibold text-gray-900 mb-2">{app.name}</h3>
-                <p className="text-sm text-gray-600 mb-4">{app.description}</p>
-                
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Recursos:</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    {app.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center space-x-2">
-                        <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </div>
             ))}

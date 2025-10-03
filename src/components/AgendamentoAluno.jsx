@@ -240,7 +240,8 @@ const AgendamentoAluno = () => {
                           </div>
                           <div className="flex-1">
                             <h3 className="font-semibold text-gray-900">{psychologist.name}</h3>
-                            <p className="text-sm text-blue-600 mb-1">{psychologist.specialty}</p>
+                            <span className="text-xs text-gray-500">Especialidades:&nbsp;</span>
+                            <label className="text-sm text-blue-600 mb-1">{psychologist.specialty}</label>
                             {/* <p className="text-xs text-gray-600 mb-2">
                               Disponível: {psychologist.availability}
                             </p> */}
@@ -331,7 +332,7 @@ const AgendamentoAluno = () => {
                 {/* Horário Preferido */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Horário preferido: *
+                    Horário Disponivél: *
                   </label>
                   <select
                     value={selectedTime}
@@ -380,6 +381,7 @@ const AgendamentoAluno = () => {
                   <span>Permitir que o psicólogo acesse minhas autoavaliações para esta consulta.</span>
                 </label>
               </div>
+              <br />
 
               {/* Submit Button */}
               <button
