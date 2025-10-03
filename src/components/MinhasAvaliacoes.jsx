@@ -103,14 +103,28 @@ const MinhasAvaliacoes = () => {
   };
 
   const formatarData = (dataString) => {
-    const data = new Date(dataString);
-    return data.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dataString || dataString === 'Data não disponível') {
+      return 'Data não disponível';
+    }
+    
+    try {
+      const data = new Date(dataString);
+      // Verificar se a data é válida
+      if (isNaN(data.getTime())) {
+        return 'Data inválida';
+      }
+      
+      return data.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Erro ao formatar data:', error);
+      return 'Data inválida';
+    }
   };
 
   const obterCorNivelRisco = (nivel) => {
@@ -284,7 +298,7 @@ const MinhasAvaliacoes = () => {
                       </div>
                       
                       <div className="text-sm text-gray-600 mb-2">
-                        <p><strong>Data:</strong> {formatarData(avaliacao.data_avaliacao || avaliacao.timestamp || new Date())}</p>
+                        <p><strong>Data:</strong> {formatarData(avaliacao.data_criacao || avaliacao.data_avaliacao || avaliacao.timestamp || 'Data não disponível')}</p>
                         {avaliacao.pontuacao && (
                           <p><strong>Pontuação:</strong> {avaliacao.pontuacao}</p>
                         )}
@@ -353,7 +367,7 @@ const MinhasAvaliacoes = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Data</label>
-                      <p className="text-gray-900">{formatarData(showDetalhes.data_avaliacao || showDetalhes.timestamp || new Date())}</p>
+                      <p className="text-gray-900">{formatarData(showDetalhes.data_criacao || showDetalhes.data_avaliacao || showDetalhes.timestamp || 'Data não disponível')}</p>
                     </div>
                   </div>
 
