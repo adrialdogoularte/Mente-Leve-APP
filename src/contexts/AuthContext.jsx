@@ -95,6 +95,17 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
+  const atualizarUsuario = (novosDados) => {
+    setUser(prevUser => ({
+      ...prevUser,
+      ...novosDados
+    }));
+    localStorage.setItem("user", JSON.stringify({
+      ...JSON.parse(localStorage.getItem("user")),
+      ...novosDados
+    }));
+  };
+
   const login = async (email, senha) => {
     try {
       const response = await api.post('/auth/login', { email, senha });
@@ -212,6 +223,7 @@ export const AuthProvider = ({ children }) => {
     registrarAluno,
     registrarPsicologo,
     atualizarPerfil,
+    atualizarUsuario,
     api,
   };
 

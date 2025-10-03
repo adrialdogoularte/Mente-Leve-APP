@@ -21,8 +21,7 @@ const Registro = () => {
     // Campos para psicólogo
     crp: '',
     especialidades: [],
-    modalidades_atendimento: [],
-    biografia: ''
+    modalidades_atendimento: []
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -171,8 +170,7 @@ const Registro = () => {
         senha: formData.senha,
         crp: formData.crp,
         especialidades: formData.especialidades,
-        modalidades_atendimento: formData.modalidades_atendimento,
-        biografia: formData.biografia
+        modalidades_atendimento: formData.modalidades_atendimento
       });
     }
 

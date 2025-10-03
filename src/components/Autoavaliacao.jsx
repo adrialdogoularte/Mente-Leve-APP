@@ -163,22 +163,31 @@ const Autoavaliacao = () => {
         ];
       }
       
-      const novaAvaliacao = {
-        id: Date.now(),
+      const dadosAvaliacao = {
         pontuacao_total: pontuacaoTotal,
         nivel_risco: nivelRisco,
-        data_criacao: new Date().toISOString(),
-        compartilhada: false,
         respostas,
         recomendacoes
       };
       
-      // Salvar no localStorage
-      const avaliacoesExistentes = JSON.parse(localStorage.getItem('avaliacoes') || '[]');
-      const novasAvaliacoes = [novaAvaliacao, ...avaliacoesExistentes];
-      localStorage.setItem('avaliacoes', JSON.stringify(novasAvaliacoes));
+      // Enviar para o backend
+      const token = localStorage.getItem('access_token');
+      const response = await fetch('http://localhost:5000/api/avaliacoes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(dadosAvaliacao)
+      });
       
-      setResultado(novaAvaliacao);
+      if (!response.ok) {
+        throw new Error('Erro ao salvar avaliação no servidor');
+      }
+      
+      const resultado = await response.json();
+      setResultado(resultado.avaliacao);
+      
     } catch (error) {
       console.error('Erro ao finalizar avaliação:', error);
       alert('Erro ao salvar avaliação. Tente novamente.');

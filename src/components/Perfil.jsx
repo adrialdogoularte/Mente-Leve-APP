@@ -15,7 +15,7 @@ const moods = [
 ];
 
 // Componente para gerenciar a disponibilidade do psicólogo
-const DisponibilidadePsicologo = ({ user, api }) => {
+const DisponibilidadePsicologo = ({ user, api, atualizarUsuario }) => {
   const [disponibilidade, setDisponibilidade] = useState({});
   const [editandoDisponibilidade, setEditandoDisponibilidade] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -95,15 +95,7 @@ const DisponibilidadePsicologo = ({ user, api }) => {
         setEditandoDisponibilidade(false);
         
         // Atualizar os dados do usuário no contexto para refletir a mudança
-        try {
-          const updatedUserResponse = await api.get('/auth/me');
-          if (updatedUserResponse.data) {
-            // Se houver uma função para atualizar o contexto do usuário, chame-a aqui
-            // Por exemplo: updateUser(updatedUserResponse.data);
-          }
-        } catch (updateError) {
-          console.warn('Erro ao atualizar dados do usuário:', updateError);
-        }
+        atualizarUsuario({ disponibilidade: disponibilidade });
         
         setTimeout(() => setSuccess(''), 3000);
       }
@@ -244,7 +236,7 @@ const DisponibilidadePsicologo = ({ user, api }) => {
 };
 
 const Perfil = () => {
-  const { user, api, atualizarPerfil } = useAuth();
+  const { user, api, atualizarPerfil, atualizarUsuario } = useAuth();
   const [registrosHumor, setRegistrosHumor] = useState([]);
   const [estatisticasHumor, setEstatisticasHumor] = useState({});
   const [editandoPerfil, setEditandoPerfil] = useState(false);
@@ -642,7 +634,7 @@ const Perfil = () => {
                 )}
               </div>
             ) : (
-              <DisponibilidadePsicologo user={user} api={api} />
+              <DisponibilidadePsicologo user={user} api={api} atualizarUsuario={atualizarUsuario} />
             )}
           </div>
         </div>

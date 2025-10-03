@@ -20,27 +20,15 @@ const MinhasAvaliacoes = () => {
   const carregarDados = useCallback(async () => {
     setLoading(true);
     try {
-      // Carregar avaliações do localStorage e da API
-      const avaliacoesSalvas = JSON.parse(localStorage.getItem('avaliacoes') || '[]');
-      
-      // Tentar carregar avaliações da API também
+      // Carregar avaliações apenas da API
       try {
         const avaliacoesResponse = await api.get('/avaliacoes');
         const avaliacoesAPI = avaliacoesResponse.data.avaliacoes || [];
-        
-        // Combinar avaliações do localStorage com as da API, removendo duplicatas
-        const todasAvaliacoes = [...avaliacoesSalvas];
-        avaliacoesAPI.forEach(avaliacao => {
-          if (!todasAvaliacoes.find(a => a.id === avaliacao.id)) {
-            todasAvaliacoes.push(avaliacao);
-          }
-        });
-        
-        setAvaliacoes(todasAvaliacoes);
+        setAvaliacoes(avaliacoesAPI);
       } catch (apiError) {
-        // Se a API falhar, usar apenas as do localStorage
-        console.warn('Erro ao carregar avaliações da API, usando localStorage:', apiError);
-        setAvaliacoes(avaliacoesSalvas);
+        console.error('Erro ao carregar avaliações da API:', apiError);
+        setAvaliacoes([]);
+        setError('Erro ao carregar avaliações. Tente novamente.');
       }
 
       // Carregar lista de psicólogos para compartilhamento

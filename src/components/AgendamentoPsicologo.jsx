@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Monitor, MapPin, Eye, X, FileText } from 'lucide-react';
+import { Calendar, Clock, User, Monitor, MapPin, Eye, X, FileText, BarChart3, TrendingUp } from 'lucide-react';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
 const AgendamentoPsicologo = () => {
+  const { user, api } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [studentEvaluations, setStudentEvaluations] = useState([]);
+  const [loadingEvaluations, setLoadingEvaluations] = useState(false);
 
   useEffect(() => {
     fetchAppointments();
@@ -18,18 +22,14 @@ const AgendamentoPsicologo = () => {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        setError('Token de acesso não encontrado. Faça login novamente.');
+      
+      if (!user || user.tipo_usuario !== 'psicologo') {
+        setError('Usuário não é psicólogo ou não está autenticado.');
         setLoading(false);
         return;
       }
 
-      const response = await axios.get(`${API_BASE_URL}/agendamentos/meus`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get('/agendamentos/meus');
       setAppointments(response.data);
     } catch (error) {
       console.error('Erro ao carregar agendamentos:', error);
@@ -80,9 +80,37 @@ const AgendamentoPsicologo = () => {
     }
   };
 
+  const fetchStudentEvaluations = async (appointmentId) => {
+    try {
+      setLoadingEvaluations(true);
+      
+      // Usar o contexto de autenticação em vez de localStorage diretamente
+      if (!user || user.tipo_usuario !== 'psicologo') {
+        console.warn('Usuário não é psicólogo ou não está autenticado.');
+        return;
+      }
+
+      const response = await api.get(`/agendamentos/${appointmentId}/avaliacoes`);
+      setStudentEvaluations(response.data.avaliacoes || []);
+    } catch (error) {
+      console.error('Erro ao carregar avaliações do aluno:', error);
+      if (error.response?.status === 403) {
+        setStudentEvaluations([]);
+      }
+    } finally {
+      setLoadingEvaluations(false);
+    }
+  };
+
   const handleViewDetails = (appointment) => {
     setSelectedAppointment(appointment);
     setShowModal(true);
+    setStudentEvaluations([]);
+    
+    // Buscar avaliações se o aluno permitiu acesso
+    if (appointment.permitir_acesso_avaliacoes) {
+      fetchStudentEvaluations(appointment.id);
+    }
   };
 
   const closeModal = () => {
@@ -405,6 +433,86 @@ const AgendamentoPsicologo = () => {
                     </label>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <p className="text-sm text-gray-900">{selectedAppointment.notas}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Seção de Avaliações do Aluno */}
+                {selectedAppointment.permitir_acesso_avaliacoes && (
+                  <div className="mt-6 border-t pt-4">
+                    <div className="flex items-center mb-3">
+                      <BarChart3 className="h-5 w-5 text-blue-500 mr-2" />
+                      <h4 className="text-lg font-medium text-gray-900">Autoavaliações do Aluno</h4>
+                    </div>
+                    
+                    {loadingEvaluations ? (
+                      <div className="text-center py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                        <p className="text-sm text-gray-500 mt-2">Carregando avaliações...</p>
+                      </div>
+                    ) : studentEvaluations.length > 0 ? (
+                      <div className="space-y-3 max-h-60 overflow-y-auto">
+                        {studentEvaluations.slice(0, 10).map((evaluation, index) => (
+                          <div key={evaluation.id || index} className="bg-gray-50 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-gray-700">
+                                {new Date(evaluation.data_criacao).toLocaleDateString('pt-BR')}
+                              </span>
+                              <div className="flex items-center">
+                                <TrendingUp className="h-4 w-4 text-gray-400 mr-1" />
+                                <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                                  evaluation.nivel_risco === 'baixo' ? 'bg-green-100 text-green-800' :
+                                  evaluation.nivel_risco === 'medio' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {evaluation.nivel_risco === 'baixo' ? 'Baixo Risco' :
+                                   evaluation.nivel_risco === 'medio' ? 'Médio Risco' : 'Alto Risco'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="mb-2">
+                              <span className="text-xs text-gray-500">Pontuação Total: </span>
+                              <span className="text-sm font-medium text-gray-700">{evaluation.pontuacao_total}</span>
+                            </div>
+                            {evaluation.categorias_pontuacao && Object.keys(evaluation.categorias_pontuacao).length > 0 && (
+                              <div className="grid grid-cols-2 gap-1 text-xs text-gray-600 mb-2">
+                                {Object.entries(evaluation.categorias_pontuacao).slice(0, 4).map(([categoria, pontuacao]) => (
+                                  <div key={categoria}>
+                                    {categoria.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}: {pontuacao}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {evaluation.recomendacoes && evaluation.recomendacoes.length > 0 && (
+                              <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
+                                <span className="font-medium text-blue-800">Principais recomendações:</span>
+                                <ul className="text-blue-700 mt-1 list-disc list-inside">
+                                  {evaluation.recomendacoes.slice(0, 2).map((rec, idx) => (
+                                    <li key={idx}>{rec}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <BarChart3 className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                        <p className="text-sm text-gray-500">Nenhuma autoavaliação encontrada</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {!selectedAppointment.permitir_acesso_avaliacoes && (
+                  <div className="mt-6 border-t pt-4">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <div className="flex items-center">
+                        <Eye className="h-5 w-5 text-yellow-500 mr-2" />
+                        <p className="text-sm text-yellow-700">
+                          O aluno não permitiu o acesso às suas autoavaliações para esta consulta.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}

@@ -10,6 +10,7 @@ const AgendamentoAluno = () => {
   const [selectedTime, setSelectedTime] = useState('');
   const [selectedMode, setSelectedMode] = useState('');
   const [notes, setNotes] = useState('');
+  const [allowEvaluationAccess, setAllowEvaluationAccess] = useState(false);
   const [psychologists, setPsychologists] = useState([]);
   const [myAppointments, setMyAppointments] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
@@ -150,6 +151,7 @@ const AgendamentoAluno = () => {
         hora_agendamento: selectedTime,
         modalidade: selectedMode,
         notas: notes,
+        permitir_acesso_avaliacoes: allowEvaluationAccess,
       };
 
       await axios.post(`${API_BASE_URL}/agendamentos`, appointmentData, {
@@ -167,9 +169,10 @@ const AgendamentoAluno = () => {
       setSelectedTime('');
       setSelectedMode('');
       setNotes('');
+      setAllowEvaluationAccess(false);
     } catch (err) {
       console.error('Erro ao solicitar agendamento:', err);
-      alert('Horário indisponível. Tente outro horário.');
+      alert('Erro ao solicitar agendamento. Tente novamente.');
     }
   };
 
@@ -365,6 +368,19 @@ const AgendamentoAluno = () => {
                 />
               </div>
 
+              {/* Flag de Permissão de Acesso às Autoavaliações */}
+              <div className="flex items-start space-x-2">
+                <label className="flex items-center space-x-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={allowEvaluationAccess}
+                    onChange={(e) => setAllowEvaluationAccess(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>Permitir que o psicólogo acesse minhas autoavaliações para esta consulta.</span>
+                </label>
+              </div>
+
               {/* Submit Button */}
               <button
                 onClick={handleSubmit}
@@ -398,46 +414,54 @@ const AgendamentoAluno = () => {
                   myAppointments.map((appointment) => (
                     <div key={appointment.id} className="p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900">{appointment.psicologo_nome}</h3>
+                        <h3 className="font-semibold text-gray-900">
+                          {appointment.psicologo_nome || 'Psicólogo'}
+                        </h3>
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          appointment.status === 'Confirmado'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-yellow-100 text-yellow-700'
+                          appointment.status === 'Pendente' 
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : appointment.status === 'Confirmado'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                         }`}>
-                          {appointment.status}
+                          {appointment.status || 'Pendente'}
                         </span>
                       </div>
-                      {/* <p className="text-sm text-gray-600 mb-2">{appointment.specialty}</p> */}
-                      <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
-                        <div className="flex items-center space-x-1">
+                      <div className="space-y-1 text-sm text-gray-600">
+                        <div className="flex items-center space-x-2">
                           <Calendar className="h-4 w-4" />
-                          <span>{appointment.data_agendamento}</span>
+                          <span>{appointment.data_agendamento ? new Date(appointment.data_agendamento + 'T00:00:00').toLocaleDateString('pt-BR') : 'Data inválida'}</span>
                         </div>
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center space-x-2">
                           <Clock className="h-4 w-4" />
-                          <span>{appointment.hora_agendamento}</span>
+                          <span>{appointment.hora_agendamento || 'Horário não definido'}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {appointment.modalidade === 'online' ? (
+                            <Monitor className="h-4 w-4" />
+                          ) : (
+                            <MapPin className="h-4 w-4" />
+                          )}
+                          <span>{appointment.modalidade === 'online' ? 'Online' : 'Presencial'}</span>
                         </div>
                       </div>
-                      {/* Nova seção para mostrar a modalidade */}
-                      <div className="flex items-center space-x-2 mb-2">
-                        {appointment.modalidade === 'online' ? (
-                          <Monitor className="h-4 w-4 text-blue-500" />
-                        ) : (
-                          <MapPin className="h-4 w-4 text-green-500" />
-                        )}
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          appointment.modalidade === 'online'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-green-100 text-green-700'
-                        }`}>
-                          {appointment.modalidade === 'online' ? 'Online' : 'Presencial'}
-                        </span>
-                      </div>
-                      {appointment.notas && <p className="text-sm text-gray-600 italic">"{appointment.notas}"</p>}
+                      {appointment.notas && (
+                        <div className="mt-2 p-2 bg-gray-50 rounded text-sm text-gray-600">
+                          <em>"{appointment.notas}"</em>
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-500">Você não possui agendamentos futuros.</p>
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Nenhum agendamento encontrado
+                    </h3>
+                    <p className="text-gray-500">
+                      Quando você agendar consultas, elas aparecerão aqui.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -445,46 +469,27 @@ const AgendamentoAluno = () => {
             {/* Informações Importantes */}
             <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
               <div className="flex items-center space-x-2 mb-4">
-                <AlertCircle className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold text-blue-900">Informações Importantes</h3>
+                <AlertCircle className="h-5 w-5 text-blue-500" />
+                <h3 className="text-lg font-semibold text-blue-900">
+                  Informações Importantes
+                </h3>
               </div>
-              
               <div className="space-y-3 text-sm text-blue-800">
                 <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                   <span>Selecione um psicólogo, modalidade e horário de sua preferência</span>
                 </div>
                 <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                   <span>O profissional entrará em contato para confirmar</span>
                 </div>
                 <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                   <span>Consultas online são realizadas por videochamada</span>
                 </div>
                 <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Consultas presenciais são no consultório do profissional</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Serviço gratuito para universitários</span>
-                </div>
-              </div>
-
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-start space-x-2">
-                  <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-xs text-yellow-800">
-                    <p className="font-medium mb-1">Lembre-se:</p>
-                    <ul className="space-y-1">
-                      <li>• Este é um serviço de apoio, não substitui tratamento médico</li>
-                      <li>• Em emergências, procure ajuda imediatamente (CVV: 188)</li>
-                      <li>• Seja pontual e respeite os horários agendados</li>
-                      <li>• Cancele com antecedência se não puder comparecer</li>
-                      <li>• Para consultas online, teste sua conexão previamente</li>
-                    </ul>
-                  </div>
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>Mantenha seus dados de contato atualizados</span>
                 </div>
               </div>
             </div>
@@ -494,6 +499,5 @@ const AgendamentoAluno = () => {
     </div>
   );
 };
-
 
 export default AgendamentoAluno;

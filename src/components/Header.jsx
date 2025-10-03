@@ -15,14 +15,17 @@ const Header = () => {
     navigate('/');
     setIsUserMenuOpen(false);
   };
-
+  // lista de itens de navegação com base no tipo de usuário  
   const navigationItems = [
     { name: 'Início', href: '/' },
     ...(user?.tipo_usuario === 'aluno' ? [{ name: 'Autoavaliação', href: '/autoavaliacao' }] : []),
-    { name: 'Registro de Humor', href: '/registro-humor' },
-    { name: 'Dicas', href: '/dicas' },
+    ...(user?.tipo_usuario === 'aluno' ? [{ name: 'Registro de Humor', href: '/registro-humor' }] : []),
+    ...(user?.tipo_usuario === 'aluno' ? [{ name: 'Dicas', href: '/dicas' }] : []),
+    ...(user?.tipo_usuario === 'aluno' ? [{ name: 'Suporte', href: '/suporte' }] : []),
+    // { name: 'Registro de Humor', href: '/registro-humor' },
+    // { name: 'Dicas', href: '/dicas' },
     { name: 'Agendamento', href: '/agendamento' },
-    { name: 'Suporte', href: '/suporte' }
+    // { name: 'Suporte', href: '/suporte' }
   ];
 
   const isActive = (path) => {
