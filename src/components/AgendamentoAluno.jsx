@@ -394,105 +394,73 @@ const AgendamentoAluno = () => {
                 }`}
               >
                 <div className="flex items-center justify-center space-x-2">
-                  <Send className="h-4 w-4" />
+                  <Send className="h-5 w-5" />
                   <span>Solicitar Agendamento</span>
                 </div>
               </button>
             </div>
           </div>
 
-          {/* Sidebar - Meus Agendamentos */}
-          <div>
+          {/* Meus Agendamentos */}
+          <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center space-x-2 mb-6">
-                <Clock className="h-5 w-5 text-blue-500" />
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Meus Agendamentos
-                </h2>
+                <Clock className="h-5 w-5 text-purple-500" />
+                <h2 className="text-lg font-semibold text-gray-900">Meus Agendamentos</h2>
               </div>
-
               <div className="space-y-4">
                 {myAppointments.length > 0 ? (
                   myAppointments.map((appointment) => (
                     <div key={appointment.id} className="p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900">
-                          {appointment.psicologo_nome || 'Psicólogo'}
-                        </h3>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          appointment.status === 'Pendente' 
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : appointment.status === 'Confirmado'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
+                        <div className="flex flex-col">
+                          <h3 className="font-semibold text-gray-900">
+                            Consulta com {appointment.psicologo_nome || 'Psicólogo'}
+                          </h3>
+                          {appointment.modalidade === 'online' && appointment.link_videoconferencia && (
+                            <a 
+                              href={appointment.link_videoconferencia} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-blue-500 hover:underline flex items-center mt-1"
+                            >
+                              <Monitor className="h-4 w-4 mr-1" /> Acessar Videochamada
+                            </a>
+                          )}
+                        </div>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            appointment.status === 'Pendente'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : appointment.status === 'Confirmado'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
                           {appointment.status || 'Pendente'}
                         </span>
                       </div>
-                      <div className="space-y-1 text-sm text-gray-600">
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>{appointment.data_agendamento ? new Date(appointment.data_agendamento + 'T00:00:00').toLocaleDateString('pt-BR') : 'Data inválida'}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Clock className="h-4 w-4" />
-                          <span>{appointment.hora_agendamento || 'Horário não definido'}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {appointment.modalidade === 'online' ? (
-                            <Monitor className="h-4 w-4" />
-                          ) : (
-                            <MapPin className="h-4 w-4" />
-                          )}
-                          <span>{appointment.modalidade === 'online' ? 'Online' : 'Presencial'}</span>
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-4 w-4" />
+                        <span>{appointment.data_agendamento ? new Date(appointment.data_agendamento + 'T00:00:00').toLocaleDateString('pt-BR') : 'Data inválida'}</span>
                       </div>
-                      {appointment.notas && (
-                        <div className="mt-2 p-2 bg-gray-50 rounded text-sm text-gray-600">
-                          <em>"{appointment.notas}"</em>
-                        </div>
-                      )}
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-4 w-4" />
+                        <span>{appointment.hora_agendamento || 'Horário não definido'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {appointment.modalidade === 'online' ? (
+                          <Monitor className="h-4 w-4 text-blue-500" />
+                        ) : (
+                          <MapPin className="h-4 w-4 text-green-500" />
+                        )}
+                        <span>{appointment.modalidade === 'online' ? 'Online' : 'Presencial'}</span>
+                      </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      Nenhum agendamento encontrado
-                    </h3>
-                    <p className="text-gray-500">
-                      Quando você agendar consultas, elas aparecerão aqui.
-                    </p>
-                  </div>
+                  <p className="text-gray-500">Você não possui agendamentos.</p>
                 )}
-              </div>
-            </div>
-
-            {/* Informações Importantes */}
-            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <AlertCircle className="h-5 w-5 text-blue-500" />
-                <h3 className="text-lg font-semibold text-blue-900">
-                  Informações Importantes
-                </h3>
-              </div>
-              <div className="space-y-3 text-sm text-blue-800">
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>Selecione um psicólogo, modalidade e horário de sua preferência</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>O profissional entrará em contato para confirmar</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>Consultas online são realizadas por videochamada</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>Mantenha seus dados de contato atualizados</span>
-                </div>
               </div>
             </div>
           </div>

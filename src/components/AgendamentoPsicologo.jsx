@@ -233,6 +233,18 @@ const AgendamentoPsicologo = () => {
                             Consulta com {appointment.aluno_nome || 'Aluno'}
                           </h3>
                           <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                            {appointment.modalidade === 'online' && appointment.link_videoconferencia && (
+                              <span className="flex items-center">
+                                <a 
+                                  href={appointment.link_videoconferencia} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="text-blue-500 hover:underline flex items-center"
+                                >
+                                  <Monitor className="h-4 w-4 mr-1" /> Acessar Videochamada
+                                </a>
+                              </span>
+                            )}
                             <span className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
                               {formatDateShort(appointment.data_agendamento)}
@@ -297,6 +309,18 @@ const AgendamentoPsicologo = () => {
                             Consulta com {appointment.aluno_nome || 'Aluno'}
                           </h3>
                           <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                            {appointment.modalidade === 'online' && appointment.link_videoconferencia && (
+                              <span className="flex items-center">
+                                <a 
+                                  href={appointment.link_videoconferencia} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="text-blue-500 hover:underline flex items-center"
+                                >
+                                  <Monitor className="h-4 w-4 mr-1" /> Acessar Videochamada
+                                </a>
+                              </span>
+                            )}
                             <span className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
                               {formatDateShort(appointment.data_agendamento)}
