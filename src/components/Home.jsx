@@ -1,17 +1,42 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Clock, Smile, BookOpen, Calendar, CheckCircle, AlertCircle, Activity } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import DashboardPsicologo from './DashboardPsicologo'; // Dashboard para psicólogos
 
 const Home = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="text-center p-4">Carregando informações do usuário...</div>;
+  }
+
+  // Se for psicólogo, exibir o dashboard
+  if (user && user.tipo_usuario === 'psicologo') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Bem-vindo(a), Dr(a). {user.nome}!
+            </h1>
+            <p className="text-lg text-gray-600">
+              Acompanhe seus agendamentos e estatísticas de atendimento.
+            </p>
+          </div>
+          <DashboardPsicologo />
+        </main>
+      </div>
+    );
+  }
+
+  // Layout original para alunos ou usuários não logados
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}
         <div className="text-center mb-16">
           <div className="flex justify-center mb-6">
-            {/* <div className="bg-gradient-to-r from-blue-500 to-teal-500 p-4 rounded-full">
-              <Heart className="h-12 w-12 text-white" fill="currentColor" />
-            </div> */}
             <img src="logo.png" alt="logo" className="h-40 w-40"></img>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -209,4 +234,3 @@ const Home = () => {
 };
 
 export default Home;
-
