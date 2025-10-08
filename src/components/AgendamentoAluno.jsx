@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, User, CheckCircle, AlertCircle, Send, Monitor, MapPin } from 'lucide-react';
-import axios from 'axios'; // Importar axios para fazer requisições HTTP
-
-const API_BASE_URL = 'http://localhost:5000/api'; // Ajuste conforme a URL do seu backend
+import { useAuth } from '../contexts/AuthContext';
 
 const AgendamentoAluno = () => {
+  const { api } = useAuth();
   const [selectedPsychologist, setSelectedPsychologist] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -38,14 +37,7 @@ const AgendamentoAluno = () => {
         return;
       }
 
-      // Buscar agendamentos existentes para este psicólogo nesta data
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        setAvailableTimes(dayAvailability);
-        return;
-      }
-
-      // Aqui você pode fazer uma requisição para buscar agendamentos existentes
+      // Buscar agendamentos existentes para este psicólogo ne/ Aqui você pode fazer uma requisição para buscar agendamentos existentes
       // Por enquanto, vamos usar apenas a disponibilidade do psicólogo
       setAvailableTimes(dayAvailability);
       
@@ -75,7 +67,7 @@ const AgendamentoAluno = () => {
   // Função para buscar psicólogos do backend
   const fetchPsychologists = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/psicologos`);
+      const response = await api.get("/psicologos");
       setPsychologists(response.data);
     } catch (err) {
       console.error('Erro ao buscar psicólogos:', err);
@@ -86,17 +78,7 @@ const AgendamentoAluno = () => {
   // Função para buscar meus agendamentos do backend
   const fetchMyAppointments = async () => {
     try {
-      const token = localStorage.getItem('access_token'); // Assumindo que o token JWT está no localStorage
-      if (!token) {
-        console.warn('Token de acesso não encontrado. Não foi possível carregar agendamentos.');
-        setLoading(false);
-        return;
-      }
-      const response = await axios.get(`${API_BASE_URL}/agendamentos/meus`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get("/agendamentos/meus");
       setMyAppointments(response.data);
     } catch (err) {
       console.error('Erro ao buscar meus agendamentos:', err);
@@ -139,12 +121,6 @@ const AgendamentoAluno = () => {
     }
 
     try {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        alert('Você precisa estar logado para agendar.');
-        return;
-      }
-
       const appointmentData = {
         psicologo_id: selectedPsychologist.id,
         data_agendamento: selectedDate,
@@ -154,11 +130,7 @@ const AgendamentoAluno = () => {
         permitir_acesso_avaliacoes: allowEvaluationAccess,
       };
 
-      await axios.post(`${API_BASE_URL}/agendamentos`, appointmentData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.post("/agendamentos", appointmentData);
 
       alert('Agendamento solicitado com sucesso!');
       // Atualizar a lista de agendamentos após o sucesso

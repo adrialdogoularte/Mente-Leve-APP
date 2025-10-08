@@ -3,7 +3,7 @@ import { Calendar, Clock, User, Monitor, MapPin, Eye, X, FileText, BarChart3, Tr
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+
 
 const AgendamentoPsicologo = () => {
   const { user, api } = useAuth();
