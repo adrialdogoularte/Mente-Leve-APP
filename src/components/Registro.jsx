@@ -21,7 +21,10 @@ const Registro = () => {
     // Campos para psicólogo
     crp: '',
     especialidades: [],
-    modalidades_atendimento: []
+    modalidades_atendimento: [],
+    // Campos de consentimento (NOVOS CAMPOS)
+    consentimentoTermos: false,
+    consentimentoPolitica: false
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -54,9 +57,10 @@ const Registro = () => {
   ];
 
   const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? checked : value
     });
     setError('');
   };
@@ -126,7 +130,9 @@ const Registro = () => {
       if (!formData.universidade || !formData.curso || !formData.periodo) {
         return 'Todos os campos de aluno são obrigatórios';
       }
-    } else if (tipoUsuario === 'psicologo') {
+    }
+
+    if (tipoUsuario === 'psicologo') {
       if (!formData.crp) {
         return 'CRP é obrigatório';
       }
@@ -136,6 +142,11 @@ const Registro = () => {
       if (!formData.modalidades_atendimento || formData.modalidades_atendimento.length === 0) {
         return 'Pelo menos uma modalidade de atendimento deve ser selecionada';
       }
+    }
+
+    // Validação de Consentimento (NOVA VALIDAÇÃO)
+    if (!formData.consentimentoTermos || !formData.consentimentoPolitica) {
+      return 'Você deve concordar com os Termos de Uso e a Política de Privacidade para se registrar.';
     }
 
     return null;
@@ -154,20 +165,27 @@ const Registro = () => {
     }
 
     let result;
+    const commonData = {
+      nome: formData.nome,
+      email: formData.email,
+      senha: formData.senha,
+      // Dados de Consentimento (ENVIADOS AO BACKEND)
+      consentimentoTermos: formData.consentimentoTermos,
+      consentimentoPolitica: formData.consentimentoPolitica,
+      versaoTermos: '1.0', // Versão atual dos Termos de Uso
+      versaoPolitica: '1.0' // Versão atual da Política de Privacidade
+    };
+
     if (tipoUsuario === 'aluno') {
       result = await registrarAluno({
-        nome: formData.nome,
-        email: formData.email,
-        senha: formData.senha,
+        ...commonData,
         universidade: formData.universidade,
         curso: formData.curso,
         periodo: formData.periodo
       });
     } else {
       result = await registrarPsicologo({
-        nome: formData.nome,
-        email: formData.email,
-        senha: formData.senha,
+        ...commonData,
         crp: formData.crp,
         especialidades: formData.especialidades,
         modalidades_atendimento: formData.modalidades_atendimento
@@ -287,7 +305,7 @@ const Registro = () => {
                     onChange={handleChange}
                     required
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="seu@email.com"
+                    placeholder="seu.email@exemplo.com"
                   />
                 </div>
               </div>
@@ -306,7 +324,7 @@ const Registro = () => {
                     value={formData.senha}
                     onChange={handleChange}
                     required
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Mínimo 8 caracteres"
                   />
                   <button
@@ -322,7 +340,7 @@ const Registro = () => {
               {/* Confirmar Senha */}
               <div>
                 <label htmlFor="confirmarSenha" className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirmar senha *
+                  Confirmar Senha *
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -333,8 +351,8 @@ const Registro = () => {
                     value={formData.confirmarSenha}
                     onChange={handleChange}
                     required
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Confirme sua senha"
+                    className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Repita sua senha"
                   />
                   <button
                     type="button"
@@ -349,11 +367,8 @@ const Registro = () => {
 
             {/* Campos Específicos para Aluno */}
             {tipoUsuario === 'aluno' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900 border-t pt-6">
-                  Informações Acadêmicas
-                </h3>
-                
+              <div className="space-y-6 border-t pt-6 mt-6 border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Dados do Aluno</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Universidade */}
                   <div>
@@ -431,15 +446,13 @@ const Registro = () => {
 
             {/* Campos Específicos para Psicólogo */}
             {tipoUsuario === 'psicologo' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900 border-t pt-6">
-                  Informações Profissionais
-                </h3>
+              <div className="space-y-6 border-t pt-6 mt-6 border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Dados do Psicólogo</h2>
                 
                 {/* CRP */}
                 <div>
                   <label htmlFor="crp" className="block text-sm font-medium text-gray-700 mb-2">
-                    CRP (Conselho Regional de Psicologia) *
+                    Número de Registro no CRP *
                   </label>
                   <div className="relative">
                     <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -451,35 +464,30 @@ const Registro = () => {
                       onChange={handleChange}
                       required={tipoUsuario === 'psicologo'}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Ex: 12/34567"
+                      placeholder="Ex: 00/123456"
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Formato: XX/XXXXX</p>
                 </div>
 
                 {/* Especialidades */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Especialidades * (selecione pelo menos uma)
+                    Especialidades (Mínimo 1) *
                   </label>
-                  {formData.especialidades.length > 0 && (
-                    <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
-                      <p className="text-sm text-green-700">
-                        {formData.especialidades.length} especialidade(s) selecionada(s)
-                      </p>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
+                  <div className="flex flex-wrap gap-2">
                     {especialidadesDisponiveis.map((especialidade) => (
-                      <label key={especialidade} className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.especialidades.includes(especialidade)}
-                          onChange={() => handleEspecialidadeChange(especialidade)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700">{especialidade}</span>
-                      </label>
+                      <button
+                        key={especialidade}
+                        type="button"
+                        onClick={() => handleEspecialidadeChange(especialidade)}
+                        className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                          formData.especialidades.includes(especialidade)
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {especialidade}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -487,74 +495,120 @@ const Registro = () => {
                 {/* Modalidades de Atendimento */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Modalidades de Atendimento * (selecione pelo menos uma)
+                    Modalidades de Atendimento (Mínimo 1) *
                   </label>
-                  {formData.modalidades_atendimento.length > 0 && (
-                    <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
-                      <p className="text-sm text-green-700">
-                        {formData.modalidades_atendimento.length} modalidade(s) selecionada(s)
-                      </p>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex flex-wrap gap-4">
                     {modalidadesDisponiveis.map((modalidade) => (
-                      <label key={modalidade.id} className="flex items-start space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                      <div 
+                        key={modalidade.id} 
+                        className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
+                          formData.modalidades_atendimento.includes(modalidade.id)
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-gray-300 hover:bg-gray-50'
+                        }`}
+                        onClick={() => handleModalidadeChange(modalidade.id)}
+                      >
                         <input
                           type="checkbox"
+                          id={modalidade.id}
+                          name="modalidades_atendimento"
+                          value={modalidade.id}
                           checked={formData.modalidades_atendimento.includes(modalidade.id)}
                           onChange={() => handleModalidadeChange(modalidade.id)}
-                          className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                          style={{ display: 'none' }} // Esconde o checkbox nativo
                         />
+                        <span className={`h-4 w-4 rounded-full border mr-2 flex items-center justify-center ${
+                          formData.modalidades_atendimento.includes(modalidade.id)
+                            ? 'bg-green-600 border-green-600'
+                            : 'bg-white border-gray-400'
+                        }`}>
+                          {formData.modalidades_atendimento.includes(modalidade.id) && (
+                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </span>
                         <div>
-                          <span className="text-sm font-medium text-gray-900">{modalidade.label}</span>
-                          <p className="text-xs text-gray-600">{modalidade.description}</p>
+                          <p className="text-sm font-medium text-gray-900">{modalidade.label}</p>
+                          <p className="text-xs text-gray-500">{modalidade.description}</p>
                         </div>
-                      </label>
+                      </div>
                     ))}
                   </div>
-                </div>
-
-                {/* Biografia */}
-                <div>
-                  <label htmlFor="biografia" className="block text-sm font-medium text-gray-700 mb-2">
-                    Biografia (opcional)
-                  </label>
-                  <textarea
-                    id="biografia"
-                    name="biografia"
-                    value={formData.biografia}
-                    onChange={handleChange}
-                    rows={4}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                    placeholder="Conte um pouco sobre sua experiência e abordagem terapêutica..."
-                  />
                 </div>
               </div>
             )}
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
-                loading
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
-              }`}
-            >
-              {loading ? 'Criando conta...' : 'Criar conta'}
-            </button>
-          </form>
+            {/* Bloco de Consentimento (NOVO BLOCO) */}
+            <div className="space-y-4 border-t pt-6 mt-6 border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Consentimento Legal *</h2>
+                <p className="text-sm text-gray-600">Para continuar, você deve ler e concordar com os documentos legais.</p>
 
-          {/* Links */}
-          <div className="mt-6 text-center">
-            <div className="text-sm text-gray-600">
-              Já tem uma conta?{' '}
-              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-                Faça login aqui
-              </Link>
+                {/* Checkbox Termos de Uso */}
+                <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                        <input
+                            id="consentimentoTermos"
+                            name="consentimentoTermos"
+                            type="checkbox"
+                            checked={formData.consentimentoTermos}
+                            onChange={handleChange}
+                            required
+                            className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                        />
+                    </div>
+                    <div className="ml-3 text-sm">
+                        <label htmlFor="consentimentoTermos" className="font-medium text-gray-700">
+                            Eu li e concordo com os <Link to="/termos-uso" target="_blank" className="text-blue-600 hover:text-blue-700 underline">Termos de Uso</Link> (v1.0).
+                        </label>
+                    </div>
+                </div>
+
+                {/* Checkbox Política de Privacidade */}
+                <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                        <input
+                            id="consentimentoPolitica"
+                            name="consentimentoPolitica"
+                            type="checkbox"
+                            checked={formData.consentimentoPolitica}
+                            onChange={handleChange}
+                            required
+                            className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                        />
+                    </div>
+                    <div className="ml-3 text-sm">
+                        <label htmlFor="consentimentoPolitica" className="font-medium text-gray-700">
+                            Eu li e concordo com a <Link to="/politica-privacidade" target="_blank" className="text-blue-600 hover:text-blue-700 underline">Política de Privacidade</Link> (v1.0).
+                        </label>
+                    </div>
+                </div>
             </div>
-          </div>
+
+            {/* Botão de Submit */}
+            <div>
+              <button
+                type="submit"
+                disabled={loading || !formData.consentimentoTermos || !formData.consentimentoPolitica}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white transition-colors ${
+                  loading || !formData.consentimentoTermos || !formData.consentimentoPolitica
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                }`}
+              >
+                {loading ? 'Registrando...' : 'Registrar'}
+              </button>
+            </div>
+
+            {/* Link para Login */}
+            <p className="mt-4 text-center text-sm text-gray-600">
+              Já tem uma conta?{' '}
+              <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+                Faça login
+              </Link>
+            </p>
+          </form>
         </div>
       </main>
 

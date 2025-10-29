@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Home from './components/Home';
 import Login from './components/Login';
 import Registro from './components/Registro';
+import LegalPage from './components/LegalPage'; // NOVO IMPORT
 import Autoavaliacao from './components/Autoavaliacao';
 import RegistroHumor from './components/RegistroHumor';
 import LembretesDiarios from './components/LembretesDiarios';
@@ -34,7 +35,9 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      {/* Rotas públicas */}
+      {/* Rotas públicas (ADICIONADAS) */}
+      <Route path="/politica-privacidade" element={<LegalPage type="politica" />} />
+      <Route path="/termos-uso" element={<LegalPage type="termos" />} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/registro" element={user ? <Navigate to="/" replace /> : <Registro />} />
       

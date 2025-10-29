@@ -49,8 +49,8 @@ const DisponibilidadePsicologo = ({ user, api, atualizarUsuario }) => {
     { id: 'wednesday', label: 'Quarta-feira' },
     { id: 'thursday', label: 'Quinta-feira' },
     { id: 'friday', label: 'Sexta-feira' },
-    { id: 'saturday', label: 'Sábado' },
-    { id: 'sunday', label: 'Domingo' }
+    // { id: 'saturday', label: 'Sábado' },
+    // { id: 'sunday', label: 'Domingo' }
   ];
 
   const horariosDisponiveis = [

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Phone, Mail, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Heart, Phone, Mail, ExternalLink, AlertTriangle, FileText } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -25,11 +25,25 @@ const Footer = () => {
             <h3 className="text-sm font-semibold text-gray-900">Links Úteis</h3>
             <div className="space-y-2">
               <a 
+                href="/politica-privacidade"
+                className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Política de Privacidade
+              </a>
+              <a 
+                href="/termos-uso"
+                className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Termos de Uso
+              </a>
+              <a 
                 href="https://cvv.org.br/" target="_blank" rel="noopener noreferrer"
                 className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
-                Centro de Valorização da Vida (CVV)
+                Centro de Valorização da Vida (CVV )
               </a>              
               <a 
                 href="https://www.gov.br/saude/pt-br/composicao/saes/desmad/raps/caps" target="_blank" rel="noopener noreferrer"
@@ -45,8 +59,7 @@ const Footer = () => {
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Ministério da Saúde - Saúde Mental
               </a>
-            </div>
-          </div>
+            </div>        </div>
 
           {/* Emergência */}
           <div className="space-y-4">
@@ -54,7 +67,7 @@ const Footer = () => {
             <div className="space-y-2">
               <div className="flex items-center text-sm text-gray-600">
                 <Phone className="h-4 w-4 mr-2 text-red-500" />
-                <a href="tel:188">CVV LIGUE: 188 (24h gratuito)</a>
+                <a href="tel:188">CVV LIGUE: 188 (24h gratuito )</a>
               </div>
               <div className="flex items-center text-sm text-gray-600">
                 <Phone className="h-4 w-4 mr-2 text-red-500" />
@@ -98,4 +111,3 @@ const Footer = () => {
 };
 
 export default Footer;
-
