@@ -2,14 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import {
   User, Calendar, BookOpen, GraduationCap, AlertCircle,
-  CheckCircle, Clock, Edit, Save, X, Heart, TrendingUp, BarChart3, Award
+  CheckCircle, Clock, Edit, Save, X, Heart, TrendingUp, BarChart3, Award, Trash2
 } from 'lucide-react';
+import DeleteAccountModal from './DeleteAccountModal';
 
 // Definindo os moods dentro do componente para evitar erro de referência
 const moods = [
   { id: 1, label: 'Muito Ruim', emoji: '😞' },
   { id: 2, label: 'Ruim', emoji: '🙁' },
-  { id: 3, label: 'Neutro', emoji: '😐' },
+  { id: 3, label: 3, label: 'Neutro', emoji: '😐' },
   { id: 4, label: 'Bom', emoji: '🙂' },
   { id: 5, label: 'Muito Bom', emoji: '😀' },
 ];
@@ -49,8 +50,8 @@ const DisponibilidadePsicologo = ({ user, api, atualizarUsuario }) => {
     { id: 'wednesday', label: 'Quarta-feira' },
     { id: 'thursday', label: 'Quinta-feira' },
     { id: 'friday', label: 'Sexta-feira' },
-    // { id: 'saturday', label: 'Sábado' },
-    // { id: 'sunday', label: 'Domingo' }
+    { id: 'saturday', label: 'Sábado' },
+    { id: 'sunday', label: 'Domingo' }
   ];
 
   const horariosDisponiveis = [
@@ -235,6 +236,19 @@ const DisponibilidadePsicologo = ({ user, api, atualizarUsuario }) => {
   );
 };
 
+// Função auxiliar para formatar data (assumindo que o formato é ISO string do backend)
+const formatarData = (isoString) => {
+  const date = new Date(isoString);
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+
 const Perfil = () => {
   const { user, api, atualizarPerfil, atualizarUsuario } = useAuth();
   const [registrosHumor, setRegistrosHumor] = useState([]);
@@ -252,6 +266,7 @@ const Perfil = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Função para carregar dados sem dependência de logout
   const carregarDados = useCallback(async () => {
@@ -267,9 +282,6 @@ const Perfil = () => {
       setEstatisticasHumor(statsResponse.data);
     } catch (error) {
       console.warn('Erro ao carregar dados de humor:', error);
-      // Usar dados fictícios se a API falhar
-      setRegistrosHumor([]);
-      setEstatisticasHumor({});
     }
   }, [user, api]);
 
@@ -277,46 +289,40 @@ const Perfil = () => {
     carregarDados();
   }, [carregarDados]);
 
-  // Atualizar dados do perfil quando o usuário mudar
-  useEffect(() => {
-    if (user) {
-      setDadosPerfil({
-        nome: user.nome || '',
-        email: user.email || '',
-        universidade: user.universidade || '',
-        curso: user.curso || '',
-        periodo: user.periodo || '',
-        crp: user.crp || '',
-        especialidades: Array.isArray(user.especialidades) ? user.especialidades.join(', ') : (user.especialidades || '')
-      });
-    }
-  }, [user]);
-
-  const handleEditarPerfil = () => {
-    setEditandoPerfil(true);
-    setError('');
-    setSuccess('');
-  };
-
   const handleSalvarPerfil = async () => {
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      const result = await atualizarPerfil(dadosPerfil);
+      const dadosParaEnviar = {
+        nome: dadosPerfil.nome,
+        email: dadosPerfil.email,
+        // Enviar campos específicos apenas se o tipo de usuário corresponder
+        ...(user.tipo_usuario === 'aluno' && {
+          universidade: dadosPerfil.universidade,
+          curso: dadosPerfil.curso,
+          periodo: dadosPerfil.periodo,
+        }),
+        ...(user.tipo_usuario === 'psicologo' && {
+          crp: dadosPerfil.crp,
+          // Converte a string de especialidades de volta para array
+          especialidades: dadosPerfil.especialidades.split(',').map(s => s.trim()).filter(s => s.length > 0)
+        })
+      };
 
-      if (result.success) {
+      const response = await api.put('/auth/perfil', dadosParaEnviar);
+
+      if (response.status === 200) {
         setSuccess('Perfil atualizado com sucesso!');
         setEditandoPerfil(false);
-        // Limpar mensagem de sucesso após 3 segundos
+        // Atualizar o contexto de autenticação com os novos dados
+        atualizarPerfil(response.data.user);
         setTimeout(() => setSuccess(''), 3000);
-      } else {
-        setError(result.message || 'Erro ao atualizar perfil');
       }
     } catch (error) {
       console.error('Erro ao salvar perfil:', error);
-      setError('Erro ao atualizar perfil. Tente novamente.');
+      setError('Erro ao atualizar perfil. Verifique os dados e tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -324,88 +330,56 @@ const Perfil = () => {
 
   const handleCancelarEdicao = () => {
     setEditandoPerfil(false);
+    // Restaurar os dados originais
+    setDadosPerfil({
+      nome: user?.nome || '',
+      email: user?.email || '',
+      universidade: user?.universidade || '',
+      curso: user?.curso || '',
+      periodo: user?.periodo || '',
+      crp: user?.crp || '',
+      especialidades: Array.isArray(user?.especialidades) ? user.especialidades.join(', ') : (user?.especialidades || '')
+    });
     setError('');
     setSuccess('');
-    // Restaurar dados originais
-    if (user) {
-      setDadosPerfil({
-        nome: user.nome || '',
-        email: user.email || '',
-        universidade: user.universidade || '',
-        curso: user.curso || '',
-        periodo: user.periodo || '',
-        crp: user.crp || '',
-        especialidades: Array.isArray(user.especialidades) ? user.especialidades.join(', ') : (user.especialidades || '')
-      });
-    }
-  };
-
-  const formatarData = (dataString) => {
-    const data = new Date(dataString);
-    return data.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  // Função para formatar especialidades (caso venham como string separada por vírgulas)
-  const formatarEspecialidades = (especialidade) => {
-    if (!especialidade) return [];
-    if (Array.isArray(especialidade)) return especialidade;
-    return especialidade.split(',').map(esp => esp.trim()).filter(esp => esp.length > 0);
   };
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-        </div>
-      </div>
-    );
+    return <div>Carregando...</div>;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="bg-gradient-to-r from-blue-500 to-teal-500 p-4 rounded-full">
-              <User className="h-8 w-8 text-white" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Meu Perfil</h1>
-          <p className="text-gray-600">Gerencie suas informações e acompanhe seu progresso</p>
-        </div>
+      {/* O Header e Footer devem ser importados e renderizados aqui se fizerem parte do layout */}
+      {/* <Header /> */}
+      <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Meu Perfil</h1>
 
-        {/* Mensagens */}
+        {/* Mensagens de Status */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
             <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-            <span className="text-red-700 text-sm">{error}</span>
+            <span className="text-red-700">{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
             <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-            <span className="text-green-700 text-sm">{success}</span>
+            <span className="text-green-700">{success}</span>
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Informações do Perfil */}
+          
+          {/* Coluna de Dados Cadastrais */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Informações Pessoais</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Dados Cadastrais</h2>
                 {!editandoPerfil && (
                   <button
-                    onClick={handleEditarPerfil}
+                    onClick={() => setEditandoPerfil(true)}
                     className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     <Edit className="h-5 w-5" />
@@ -415,9 +389,11 @@ const Perfil = () => {
 
               {editandoPerfil ? (
                 <div className="space-y-4">
+                  {/* Nome */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                    <label htmlFor="nome" className="block text-sm font-medium text-gray-700">Nome</label>
                     <input
+                      id="nome"
                       type="text"
                       value={dadosPerfil.nome}
                       onChange={(e) => setDadosPerfil({...dadosPerfil, nome: e.target.value})}
@@ -425,41 +401,49 @@ const Perfil = () => {
                     />
                   </div>
 
+                  {/* Email */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
                     <input
+                      id="email"
                       type="email"
                       value={dadosPerfil.email}
                       onChange={(e) => setDadosPerfil({...dadosPerfil, email: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      disabled // Email geralmente não é editável facilmente
                     />
                   </div>
 
+                  {/* Campos Específicos para Aluno */}
                   {user.tipo_usuario === 'aluno' && (
                     <>
+                      {/* Universidade */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Universidade</label>
+                        <label htmlFor="universidade" className="block text-sm font-medium text-gray-700">Universidade</label>
                         <input
+                          id="universidade"
                           type="text"
                           value={dadosPerfil.universidade}
                           onChange={(e) => setDadosPerfil({...dadosPerfil, universidade: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
-
+                      {/* Curso */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Curso</label>
+                        <label htmlFor="curso" className="block text-sm font-medium text-gray-700">Curso</label>
                         <input
+                          id="curso"
                           type="text"
                           value={dadosPerfil.curso}
                           onChange={(e) => setDadosPerfil({...dadosPerfil, curso: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
-
+                      {/* Período */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Período</label>
+                        <label htmlFor="periodo" className="block text-sm font-medium text-gray-700">Período</label>
                         <input
+                          id="periodo"
                           type="text"
                           value={dadosPerfil.periodo}
                           onChange={(e) => setDadosPerfil({...dadosPerfil, periodo: e.target.value})}
@@ -469,32 +453,35 @@ const Perfil = () => {
                     </>
                   )}
 
+                  {/* Campos Específicos para Psicólogo */}
                   {user.tipo_usuario === 'psicologo' && (
                     <>
+                      {/* CRP */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">CRP</label>
+                        <label htmlFor="crp" className="block text-sm font-medium text-gray-700">CRP</label>
                         <input
+                          id="crp"
                           type="text"
                           value={dadosPerfil.crp}
                           onChange={(e) => setDadosPerfil({...dadosPerfil, crp: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
-
+                      {/* Especialidades */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Especialidades</label>
+                        <label htmlFor="especialidades" className="block text-sm font-medium text-gray-700">Especialidades (separadas por vírgula)</label>
                         <input
+                          id="especialidades"
                           type="text"
                           value={dadosPerfil.especialidades}
                           onChange={(e) => setDadosPerfil({...dadosPerfil, especialidades: e.target.value})}
-                          placeholder="Ex: Psicologia Clínica, Terapia Cognitivo-Comportamental"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
-                        <p className="text-xs text-gray-500 mt-1">Separe múltiplas especialidades com vírgulas</p>
                       </div>
                     </>
                   )}
 
+                  {/* Botões de Ação */}
                   <div className="flex space-x-3 pt-4">
                     <button
                       onClick={handleSalvarPerfil}
@@ -592,6 +579,24 @@ const Perfil = () => {
                       </div>
                     </>
                   )}
+                  
+                  {/* Botão de Exclusão de Conta (Direito ao Esquecimento) */}
+                  <div className="md:col-span-2 border-t pt-6 mt-6 border-gray-200">
+                    <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
+                      <div>
+                        <h3 className="text-lg font-semibold text-red-800">Direito ao Esquecimento</h3>
+                        <p className="text-sm text-red-600">Exclua permanentemente todos os seus dados pessoais da plataforma (LGPD).</p>
+                      </div>
+                      <button
+                        onClick={() => setIsDeleteModalOpen(true)}
+                        className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                        <span>Excluir Conta</span>
+                      </button>
+                    </div>
+                  </div>
+                  
                 </div>
               )}
             </div>
@@ -639,6 +644,12 @@ const Perfil = () => {
           </div>
         </div>
       </main>
+      
+      {/* Modal de Exclusão de Conta */}
+      <DeleteAccountModal 
+        isOpen={isDeleteModalOpen} 
+        onClose={() => setIsDeleteModalOpen(false)} 
+      />
     </div>
   );
 };

@@ -205,13 +205,13 @@ const MinhasAvaliacoes = () => {
               <p className="text-2xl font-bold text-gray-900">{estatisticas.mediaPontuacao}</p>
             </div>
             
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
+            {/* <div className="bg-white rounded-lg p-4 border border-gray-200">
               <div className="flex items-center space-x-2">
                 <Share2 className="h-5 w-5 text-purple-600" />
                 <span className="text-sm text-gray-600">Compartilhadas</span>
               </div>
               <p className="text-2xl font-bold text-gray-900">{estatisticas.compartilhadas}</p>
-            </div>
+            </div> */}
             
             <div className="bg-white rounded-lg p-4 border border-gray-200">
               <div className="flex items-center space-x-2">
