@@ -153,7 +153,7 @@ const LembretesDiarios = () => {
           </div>
           {status.data_ultimo_registro && (
             <p className="text-sm text-gray-600">
-              Último registro: {new Date(status.data_ultimo_registro).toLocaleDateString('pt-BR')}
+              {/* Último registro: {new Date(status.data_ultimo_registro).toLocaleDateString('pt-BR')} */}
             </p>
           )}
         </div>

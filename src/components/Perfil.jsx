@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- ADIÇÃO
 import { useAuth } from '../contexts/AuthContext';
 import {
   User, Calendar, BookOpen, GraduationCap, AlertCircle,
@@ -273,6 +274,7 @@ const formatarData = (dataString) => {
 
 
 const Perfil = () => {
+  const navigate = useNavigate(); // <-- ADIÇÃO
   const { user, api, atualizarPerfil, atualizarUsuario } = useAuth();
   const [registrosHumor, setRegistrosHumor] = useState([]);
   const [estatisticasHumor, setEstatisticasHumor] = useState({});
@@ -659,11 +661,11 @@ const Perfil = () => {
                       Comece a registrar seu humor para acompanhar seu bem-estar
                     </p>
                     <button
-                onClick={() => navigate('/registro-humor')}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-              >
-                Começar a Registrar
-              </button>
+                      onClick={() => navigate('/registro-humor')}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      Começar a Registrar
+                    </button>
                   </div>
                 )}
               </div>
