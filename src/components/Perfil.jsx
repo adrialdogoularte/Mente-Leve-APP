@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom'; // <-- ADIÇÃO
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   User, Calendar, BookOpen, GraduationCap, AlertCircle,
@@ -11,7 +11,7 @@ import DeleteAccountModal from './DeleteAccountModal';
 const moods = [
   { id: 1, label: 'Muito Ruim', emoji: '😞' },
   { id: 2, label: 'Ruim', emoji: '🙁' },
-  { id: 3, label: 3, label: 'Neutro', emoji: '😐' },
+  { id: 3, label: 'Neutro', emoji: '😐' },
   { id: 4, label: 'Bom', emoji: '🙂' },
   { id: 5, label: 'Muito Bom', emoji: '😀' },
 ];
@@ -56,7 +56,7 @@ const DisponibilidadePsicologo = ({ user, api, atualizarUsuario }) => {
   ];
 
   const horariosDisponiveis = [
-    '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
+    '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00',
     '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
   ];
 
@@ -66,18 +66,18 @@ const DisponibilidadePsicologo = ({ user, api, atualizarUsuario }) => {
       if (!novaDisponibilidade[dia]) {
         novaDisponibilidade[dia] = [];
       }
-      
+
       if (novaDisponibilidade[dia].includes(horario)) {
         novaDisponibilidade[dia] = novaDisponibilidade[dia].filter(h => h !== horario);
       } else {
         novaDisponibilidade[dia] = [...novaDisponibilidade[dia], horario].sort();
       }
-      
+
       // Remove o dia se não há horários
       if (novaDisponibilidade[dia].length === 0) {
         delete novaDisponibilidade[dia];
       }
-      
+
       return novaDisponibilidade;
     });
   };
@@ -95,10 +95,10 @@ const DisponibilidadePsicologo = ({ user, api, atualizarUsuario }) => {
       if (response.status === 200) {
         setSuccess('Disponibilidade atualizada com sucesso!');
         setEditandoDisponibilidade(false);
-        
+
         // Atualizar os dados do usuário no contexto para refletir a mudança
         atualizarUsuario({ disponibilidade: disponibilidade });
-        
+
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (error) {
@@ -158,7 +158,7 @@ const DisponibilidadePsicologo = ({ user, api, atualizarUsuario }) => {
           <p className="text-sm text-gray-600">
             Selecione os dias da semana e horários em que você está disponível para atendimento.
           </p>
-          
+
           {diasSemana.map(dia => (
             <div key={dia.id} className="border border-gray-200 rounded-lg p-4">
               <h3 className="font-medium text-gray-900 mb-3">{dia.label}</h3>
@@ -205,7 +205,7 @@ const DisponibilidadePsicologo = ({ user, api, atualizarUsuario }) => {
             diasSemana.map(dia => {
               const horariosDoDia = disponibilidade[dia.id];
               if (!horariosDoDia || horariosDoDia.length === 0) return null;
-              
+
               return (
                 <div key={dia.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <span className="font-medium text-gray-900">{dia.label}</span>
@@ -241,7 +241,7 @@ const DisponibilidadePsicologo = ({ user, api, atualizarUsuario }) => {
 const formatarData = (dataString) => {
   try {
     const date = new Date(dataString);
-    
+
     const dataCorrigida = new Date(date.getTime() - (3 * 60 * 60 * 1000));
 
     // 2. Formatar a data corrigida para o fuso horário de São Paulo
@@ -261,20 +261,8 @@ const formatarData = (dataString) => {
 };
 
 
-// const formatarData = (isoString) => {
-//   const date = new Date(isoString);
-//   return date.toLocaleDateString('pt-BR', {
-//     day: '2-digit',
-//     month: '2-digit',
-//     year: 'numeric',
-//     hour: '2-digit',
-//     minute: '2-digit'
-//   });
-// };
-
-
 const Perfil = () => {
-  const navigate = useNavigate(); // <-- ADIÇÃO
+  const navigate = useNavigate();
   const { user, api, atualizarPerfil, atualizarUsuario } = useAuth();
   const [registrosHumor, setRegistrosHumor] = useState([]);
   const [estatisticasHumor, setEstatisticasHumor] = useState({});
@@ -396,7 +384,7 @@ const Perfil = () => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Coluna de Dados Cadastrais */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
@@ -467,13 +455,25 @@ const Perfil = () => {
                       {/* Período */}
                       <div>
                         <label htmlFor="periodo" className="block text-sm font-medium text-gray-700">Período</label>
-                        <input
+                        <select
                           id="periodo"
-                          type="text"
                           value={dadosPerfil.periodo}
                           onChange={(e) => setDadosPerfil({...dadosPerfil, periodo: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
+                        >
+                          <option value="">Selecione o período</option>
+                          <option value="1º período">1º período</option>
+                          <option value="2º período">2º período</option>
+                          <option value="3º período">3º período</option>
+                          <option value="4º período">4º período</option>
+                          <option value="5º período">5º período</option>
+                          <option value="6º período">6º período</option>
+                          <option value="7º período">7º período</option>
+                          <option value="8º período">8º período</option>
+                          <option value="9º período">9º período</option>
+                          <option value="10º período">10º período</option>
+                          <option value="Pós-graduação">Pós-graduação</option>
+                        </select>
                       </div>
                     </>
                   )}
@@ -604,7 +604,7 @@ const Perfil = () => {
                       </div>
                     </>
                   )}
-                  
+
                   {/* Botão de Exclusão de Conta (Direito ao Esquecimento) */}
                   <div className="md:col-span-2 border-t pt-6 mt-6 border-gray-200">
                     <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
@@ -621,7 +621,7 @@ const Perfil = () => {
                       </button>
                     </div>
                   </div>
-                  
+
                 </div>
               )}
             </div>
@@ -675,11 +675,11 @@ const Perfil = () => {
           </div>
         </div>
       </main>
-      
+
       {/* Modal de Exclusão de Conta */}
-      <DeleteAccountModal 
-        isOpen={isDeleteModalOpen} 
-        onClose={() => setIsDeleteModalOpen(false)} 
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
       />
     </div>
   );

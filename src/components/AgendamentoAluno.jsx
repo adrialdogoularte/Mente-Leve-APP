@@ -17,29 +17,43 @@ const AgendamentoAluno = () => {
   const [error, setError] = useState(null);
 
   // Função para calcular horários disponíveis baseados na disponibilidade do psicólogo e data selecionada
-  const calculateAvailableTimes = async () => {
-    if (!selectedPsychologist || !selectedDate) {
+  const calculateAvailableTimes = (psychologist, date) => {
+    const currentPsychologist = psychologist || selectedPsychologist;
+    const currentDate = date || selectedDate;
+
+    if (!currentPsychologist || !currentDate) {
       setAvailableTimes([]);
       return;
     }
 
     try {
       // Obter o dia da semana da data selecionada
-      const date = new Date(selectedDate + 'T00:00:00');
-      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      const dateObj = new Date(currentDate + 'T00:00:00');
+      const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
       
-      // Verificar se o psicólogo tem disponibilidade para este dia
-      const psychologistAvailability = selectedPsychologist.availability || {};
-      const dayAvailability = psychologistAvailability[dayOfWeek] || [];
+      // A nova estrutura de disponibilidade é:
+      // {
+      //   'monday': {
+      //     'YYYY-MM-DD': ['HH:MM', 'HH:MM', ...],
+      //     ...
+      //   },
+      //   ...
+      // }
       
-      if (dayAvailability.length === 0) {
+      const psychologistAvailability = currentPsychologist.availability || {};
+      
+      // 1. Acessar a disponibilidade para o dia da semana
+      const dayAvailability = psychologistAvailability[dayOfWeek];
+      
+      if (!dayAvailability) {
         setAvailableTimes([]);
         return;
       }
-
-      // Buscar agendamentos existentes para este psicólogo ne/ Aqui você pode fazer uma requisição para buscar agendamentos existentes
-      // Por enquanto, vamos usar apenas a disponibilidade do psicólogo
-      setAvailableTimes(dayAvailability);
+      
+      // 2. Acessar os horários disponíveis para a data específica
+      const timesForSelectedDate = dayAvailability[currentDate] || [];
+      
+      setAvailableTimes(timesForSelectedDate);
       
     } catch (error) {
       console.error('Erro ao calcular horários disponíveis:', error);
@@ -95,14 +109,21 @@ const AgendamentoAluno = () => {
 
   // Recalcular horários disponíveis quando a data ou psicólogo mudar
   useEffect(() => {
-    calculateAvailableTimes();
+    calculateAvailableTimes(selectedPsychologist, selectedDate);
   }, [selectedDate, selectedPsychologist]);
 
   const handlePsychologistSelect = (psychologist) => {
     setSelectedPsychologist(psychologist);
     setSelectedMode(''); // Reset mode selection when changing psychologist
     setSelectedTime(''); // Reset time selection when changing psychologist
-    calculateAvailableTimes(); // Recalcular horários disponíveis
+    // Não é necessário chamar calculateAvailableTimes() aqui, pois o useEffect
+    // já faz isso quando selectedPsychologist ou selectedDate mudam.
+    // No entanto, para garantir que a lógica de filtragem seja aplicada imediatamente
+    // se a data já estiver selecionada, vamos manter a chamada.
+    // O problema pode ser que a função calculateAvailableTimes não está vendo
+    // o novo estado de selectedPsychologist imediatamente.
+    // Vamos garantir que a função use o objeto psychologist passado.
+    calculateAvailableTimes(psychologist, selectedDate);
   };
 
   const handleModeSelect = (mode) => {
@@ -133,8 +154,9 @@ const AgendamentoAluno = () => {
       await api.post("/agendamentos", appointmentData);
 
       alert('Agendamento solicitado com sucesso!');
-      // Atualizar a lista de agendamentos após o sucesso
-      fetchMyAppointments();
+      // Atualizar a lista de agendamentos e a lista de psicólogos (para recarregar a disponibilidade)
+      await fetchMyAppointments();
+      await fetchPsychologists();
       // Resetar o formulário
       setSelectedPsychologist(null);
       setSelectedDate('');
@@ -144,7 +166,7 @@ const AgendamentoAluno = () => {
       setAllowEvaluationAccess(false);
     } catch (err) {
       console.error('Erro ao solicitar agendamento:', err);
-      alert('Erro ao solicitar agendamento. Tente novamente.');
+      alert('Horário não disponivél. Tente novamente com outro horário.');
     }
   };
 

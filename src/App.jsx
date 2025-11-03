@@ -16,7 +16,6 @@ import Agendamento from './components/Agendamento';
 import Suporte from './components/Suporte';
 import Perfil from './components/Perfil';
 import MinhasAvaliacoes from './components/MinhasAvaliacoes';
-import AvaliacoesRecebidas from './components/AvaliacoesRecebidas';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import './App.css';
@@ -119,14 +118,7 @@ const AppRoutes = () => {
           </Layout>
         </ProtectedRoute>
       } />
-      <Route path="/avaliacoes-recebidas" element={
-        <ProtectedRoute requiredUserType="psicologo">
-          <Layout>
-            <AvaliacoesRecebidas />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      
+            
       {/* Rota padrão - redireciona para login se não autenticado */}
       <Route path="*" element={user ? <Navigate to="/" replace /> : <Navigate to="/login" replace />} />
     </Routes>
