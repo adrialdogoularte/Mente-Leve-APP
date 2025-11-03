@@ -237,16 +237,39 @@ const DisponibilidadePsicologo = ({ user, api, atualizarUsuario }) => {
 };
 
 // Função auxiliar para formatar data (assumindo que o formato é ISO string do backend)
-const formatarData = (isoString) => {
-  const date = new Date(isoString);
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+const formatarData = (dataString) => {
+  try {
+    const date = new Date(dataString);
+    
+    const dataCorrigida = new Date(date.getTime() - (3 * 60 * 60 * 1000));
+
+    // 2. Formatar a data corrigida para o fuso horário de São Paulo
+    return dataCorrigida.toLocaleString('pt-BR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'America/Sao_Paulo', // Fuso horário comum no Brasil
+      hour12: false
+    });
+  } catch (error) {
+    // Retorna a string original se a conversão falhar (por exemplo, string inválida)
+    return dataString;
+  }
 };
+
+
+// const formatarData = (isoString) => {
+//   const date = new Date(isoString);
+//   return date.toLocaleDateString('pt-BR', {
+//     day: '2-digit',
+//     month: '2-digit',
+//     year: 'numeric',
+//     hour: '2-digit',
+//     minute: '2-digit'
+//   });
+// };
 
 
 const Perfil = () => {
@@ -635,6 +658,12 @@ const Perfil = () => {
                     <p className="text-gray-500 mb-4">
                       Comece a registrar seu humor para acompanhar seu bem-estar
                     </p>
+                    <button
+                onClick={() => navigate('/registro-humor')}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                Começar a Registrar
+              </button>
                   </div>
                 )}
               </div>

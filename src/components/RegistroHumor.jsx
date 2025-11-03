@@ -15,7 +15,7 @@ const RegistroHumor = () => {
   const [horasSono, setHorasSono] = useState('');
   const [qualidadeSono, setQualidadeSono] = useState(null);
   const [nivelEstresse, setNivelEstresse] = useState(null);
-  const [dataRegistro, setDataRegistro] = useState(new Date().toISOString().split('T')[0]);
+  const [dataRegistro, setDataRegistro] = useState(new Date().toISOString());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -176,7 +176,7 @@ const RegistroHumor = () => {
       setHorasSono('');
       setQualidadeSono(null);
       setNivelEstresse(null);
-      setDataRegistro(new Date().toISOString().split('T')[0]);
+      setDataRegistro(new Date().toISOString());
       
       // Recarregar dados
       await Promise.all([
@@ -192,11 +192,50 @@ const RegistroHumor = () => {
     }
   };
 
+
   const formatarData = (dataString) => {
     try {
-      const data = new Date(dataString);
-      return data.toLocaleDateString('pt-BR');
+      // Se a string de data contiver 'T', significa que tem hora e podemos usar a lógica de fuso horário.
+      if (dataString && dataString.includes('T')) {
+        const date = new Date(dataString);
+        
+        // Correção de fuso horário (UTC-3)
+        const dataCorrigida = new Date(date.getTime() - (3 * 60 * 60 * 1000));
+
+        let dataFormatada = dataCorrigida.toLocaleString('pt-BR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+
+        // Ajusta o formato de "dd/mm/yyyy, hh:mm" para "dd-mm-yyyy hh:mm"
+        return dataFormatada.replace(',', '').replace(/\//g, '-');
+      }
+
+      // Se a string de data for apenas "YYYY-MM-DD" (sem hora),
+      // formatamos apenas a data e forçamos a hora para 11:00, como no exemplo.
+      // Adiciona "T00:00:00" para forçar o JavaScript a interpretar a data como local,
+      // evitando a conversão para o dia anterior.
+      const date = new Date(dataString + 'T00:00:00');
+      
+      // toLocaleDateString retorna apenas a data (dd/mm/yyyy)
+      let dataFormatada = date.toLocaleDateString('pt-BR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+
+      // Ajusta o formato de "dd/mm/yyyy" para "dd-mm-yyyy"
+      dataFormatada = dataFormatada.replace(/\//g, '-');
+
+      // Retorna apenas a data, pois a hora real não está disponível no formato YYYY-MM-DD
+      return dataFormatada;
+
     } catch (error) {
+      // Retorna a string original se a conversão falhar
       return dataString;
     }
   };
@@ -280,7 +319,7 @@ const RegistroHumor = () => {
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Novo Registro</h2>
               
               {/* Data do Registro */}
-              <div className="mb-6">
+              {/* <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Data do Registro
                 </label>
@@ -290,7 +329,7 @@ const RegistroHumor = () => {
                   onChange={(e) => setDataRegistro(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
-              </div>
+              </div> */}
 
               {/* Seleção de Humor */}
               <div className="mb-6">
