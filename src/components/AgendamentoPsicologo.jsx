@@ -4,7 +4,6 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 
 
-
 const AgendamentoPsicologo = () => {
   const { user, api } = useAuth();
   const [appointments, setAppointments] = useState([]);
@@ -12,6 +11,8 @@ const AgendamentoPsicologo = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showFinalizeModal, setShowFinalizeModal] = useState(false);
+  const [didAttend, setDidAttend] = useState(true);
   const [studentEvaluations, setStudentEvaluations] = useState([]);
   const [loadingEvaluations, setLoadingEvaluations] = useState(false);
 
@@ -56,11 +57,11 @@ const AgendamentoPsicologo = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'agendado':
+      case 'Confirmado':
         return 'bg-green-100 text-green-800';
-      case 'cancelado':
+      case 'Cancelado':
         return 'bg-red-100 text-red-800';
-      case 'concluido':
+      case 'Finalizado':
         return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-yellow-100 text-yellow-800';
@@ -69,16 +70,47 @@ const AgendamentoPsicologo = () => {
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'agendado':
-        return 'Agendado';
-      case 'cancelado':
+      case 'Confirmado':
+        return 'Confirmado';
+      case 'Cancelado':
         return 'Cancelado';
-      case 'concluido':
-        return 'Concluído';
+      case 'Finalizado':
+        return 'Finalizado';
       default:
         return 'Pendente';
     }
   };
+
+  const handleUpdateStatus = async (appointmentId, newStatus, compareceu = null) => {
+    try {
+      const data = { status: newStatus };
+      if (newStatus === 'Finalizado') {
+        data.compareceu = compareceu;
+      }
+	
+	      await api.put(`/agendamentos/${appointmentId}/status`, data);
+	      
+	      alert(`Status do agendamento atualizado para ${newStatus} com sucesso!`);
+	      fetchAppointments(); // Recarrega a lista de agendamentos
+	      closeModal(); // Fecha o modal de detalhes
+	      setShowFinalizeModal(false); // Fecha o modal de finalização, se estiver aberto
+	    } catch (error) {
+	      console.error('Erro ao atualizar status:', error);
+	      const errorMessage = error.response?.data?.message || 'Erro ao atualizar status. Tente novamente.';
+	      alert(errorMessage);
+	    }
+	  };
+	
+	  const handleFinalizeClick = (appointment) => {
+	    setSelectedAppointment(appointment);
+	    setShowFinalizeModal(true);
+	  };
+	
+	  const handleFinalizeSubmit = () => {
+	    if (selectedAppointment) {
+	      handleUpdateStatus(selectedAppointment.id, 'Finalizado', didAttend);
+	    }
+	  };
 
   const fetchStudentEvaluations = async (appointmentId) => {
     try {
@@ -127,13 +159,13 @@ const AgendamentoPsicologo = () => {
   const upcomingAppointments = sortedAppointments.filter(app => {
     const appointmentDate = new Date(app.data_agendamento + 'T' + app.hora_agendamento);
     const now = new Date();
-    return appointmentDate >= now && app.status !== 'cancelado';
+    return appointmentDate >= now && app.status !== 'Cancelado' && app.status !== 'Finalizado';
   });
 
   const pastAppointments = sortedAppointments.filter(app => {
     const appointmentDate = new Date(app.data_agendamento + 'T' + app.hora_agendamento);
     const now = new Date();
-    return appointmentDate < now || app.status === 'concluido';
+    return appointmentDate < now || app.status === 'Finalizado' || app.status === 'Cancelado';
   });
 
   if (loading) {
@@ -195,7 +227,7 @@ const AgendamentoPsicologo = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Consultas Realizadas</p>
-                <p className="text-2xl font-bold text-gray-900">{pastAppointments.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{pastAppointments.filter(app => app.status === 'Finalizado').length}</p>
               </div>
             </div>
           </div>
@@ -270,8 +302,8 @@ const AgendamentoPsicologo = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-3">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(appointment.status || 'agendado')}`}>
-                          {getStatusText(appointment.status || 'agendado')}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(appointment.status || 'Pendente')}`}>
+                          {getStatusText(appointment.status || 'Pendente')}
                         </span>
                         <button
                           onClick={() => handleViewDetails(appointment)}
@@ -346,8 +378,8 @@ const AgendamentoPsicologo = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-3">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(appointment.status || 'concluido')}`}>
-                          {getStatusText(appointment.status || 'concluido')}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(appointment.status || 'Finalizado')}`}>
+                          {getStatusText(appointment.status || 'Finalizado')}
                         </span>
                         <button
                           onClick={() => handleViewDetails(appointment)}
@@ -388,6 +420,67 @@ const AgendamentoPsicologo = () => {
           </div>
         )}
 
+        {/* Modal de Finalização */}
+        {showFinalizeModal && selectedAppointment && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Finalizar Consulta</h3>
+                <button
+                  onClick={() => setShowFinalizeModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <p className="text-sm text-gray-700 mb-4">
+                Confirme se o aluno **{selectedAppointment.aluno_nome}** compareceu à consulta agendada para **{formatDateShort(selectedAppointment.data_agendamento)}** às **{selectedAppointment.hora_agendamento}**.
+              </p>
+              
+              <div className="space-y-3">
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    className="form-radio h-4 w-4 text-green-600"
+                    name="didAttend"
+                    value="true"
+                    checked={didAttend === true}
+                    onChange={() => setDidAttend(true)}
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Aluno Compareceu</span>
+                </label>
+                <label className="inline-flex items-center ml-6">
+                  <input
+                    type="radio"
+                    className="form-radio h-4 w-4 text-red-600"
+                    name="didAttend"
+                    value="false"
+                    checked={didAttend === false}
+                    onChange={() => setDidAttend(false)}
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Aluno Não Compareceu</span>
+                </label>
+              </div>
+              
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowFinalizeModal(false)}
+                  className="inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Voltar
+                </button>
+                <button
+                  onClick={handleFinalizeSubmit}
+                  className="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Confirmar Finalização
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Modal de Detalhes */}
         {showModal && selectedAppointment && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
@@ -401,6 +494,49 @@ const AgendamentoPsicologo = () => {
                   <X className="h-6 w-6" />
                 </button>
               </div>
+              
+              {/* Botões de Ação */}
+              {selectedAppointment.status === 'Pendente' && (
+                <div className="flex space-x-3 mb-4">
+                  <button
+                    onClick={() => handleUpdateStatus(selectedAppointment.id, 'Confirmado')}
+                    className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    Confirmar Agendamento
+                  </button>
+                  <button
+                    onClick={() => handleUpdateStatus(selectedAppointment.id, 'Cancelado')}
+                    className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    Cancelar Agendamento
+                  </button>
+                </div>
+              )}
+
+              {selectedAppointment.status === 'Confirmado' && (
+                <div className="flex space-x-3 mb-4">
+                  <button
+                    onClick={() => handleFinalizeClick(selectedAppointment)}
+                    className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Finalizar Consulta
+                  </button>
+                  <button
+                    onClick={() => handleUpdateStatus(selectedAppointment.id, 'Cancelado')}
+                    className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    Cancelar Agendamento
+                  </button>
+                </div>
+              )}
+              
+              {selectedAppointment.status === 'Finalizado' && (
+                <div className="mb-4 p-3 rounded-md bg-gray-100">
+                  <p className="text-sm font-medium text-gray-700">
+                    Consulta Finalizada. Aluno Compareceu: <span className={`font-bold ${selectedAppointment.compareceu ? 'text-green-600' : 'text-red-600'}`}>{selectedAppointment.compareceu ? 'Sim' : 'Não'}</span>
+                  </p>
+                </div>
+              )}
               
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -443,8 +579,8 @@ const AgendamentoPsicologo = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Status</label>
-                    <span className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedAppointment.status || 'agendado')}`}>
-                      {getStatusText(selectedAppointment.status || 'agendado')}
+                    <span className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedAppointment.status || 'Pendente')}`}>
+                      {getStatusText(selectedAppointment.status || 'Pendente')}
                     </span>
                   </div>
                 </div>

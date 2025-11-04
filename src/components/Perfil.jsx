@@ -51,13 +51,13 @@ const DisponibilidadePsicologo = ({ user, api, atualizarUsuario }) => {
     { id: 'wednesday', label: 'Quarta-feira' },
     { id: 'thursday', label: 'Quinta-feira' },
     { id: 'friday', label: 'Sexta-feira' },
-    { id: 'saturday', label: 'Sábado' },
-    { id: 'sunday', label: 'Domingo' }
+    // { id: 'saturday', label: 'Sábado' },
+    // { id: 'sunday', label: 'Domingo' }
   ];
 
   const horariosDisponiveis = [
     '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00',
-    '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
+    '15:00', '16:00', '17:00', '18:00', '19:00'
   ];
 
   const handleToggleHorario = (dia, horario) => {
