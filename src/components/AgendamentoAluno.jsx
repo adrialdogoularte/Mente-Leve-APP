@@ -164,10 +164,13 @@ const AgendamentoAluno = () => {
       setSelectedMode('');
       setNotes('');
       setAllowEvaluationAccess(false);
-    } catch (err) {
+        } catch (err) {
       console.error('Erro ao solicitar agendamento:', err);
-      alert('Horário não disponivél. Tente novamente com outro horário.');
+      // Tenta extrair a mensagem de erro do backend
+      const errorMessage = err.response?.data?.message || 'Erro ao solicitar agendamento. Tente novamente.';
+      alert(errorMessage);
     }
+
   };
 
   // Filter available modes based on selected psychologist
