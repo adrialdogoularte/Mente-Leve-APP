@@ -29,10 +29,10 @@ const DashboardPsicologo = () => {
       // Calcular estatísticas
       const stats = {
         total: agendamentosData.length,
-        pendentes: agendamentosData.filter(a => a.status === 'pendente').length,
-        confirmados: agendamentosData.filter(a => a.status === 'confirmado').length,
-        concluidos: agendamentosData.filter(a => a.status === 'concluido').length,
-        cancelados: agendamentosData.filter(a => a.status === 'cancelado').length
+        pendentes: agendamentosData.filter(a => a.status === 'Pendente').length,
+        confirmados: agendamentosData.filter(a => a.status === 'Confirmado').length,
+        concluidos: agendamentosData.filter(a => a.status === 'Finalizado').length,
+        cancelados: agendamentosData.filter(a => a.status === 'Cancelado').length
       };
       setStats(stats);
     } catch (error) {
@@ -55,7 +55,16 @@ const DashboardPsicologo = () => {
     agendamentos.forEach(agendamento => {
       if (agendamento.data_agendamento) {
         const data = new Date(agendamento.data_agendamento);
-        const diaSemana = diasSemana[data.getDay()];
+        // data.getDay() retorna 0 para Domingo, 1 para Segunda, etc.
+        // O array diasSemana está correto: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+        // O problema é que a data vem como 'YYYY-MM-DD' (sem hora), e o new Date() a interpreta como 00:00:00 UTC,
+        // o que pode fazer com que caia no dia anterior no fuso horário local (GMT-3).
+        // A solução é forçar a interpretação como data local, adicionando um offset de tempo.
+        // Ou, mais simples, usar o getUTCDay() se a data for puramente UTC.
+        // Como o backend retorna apenas a data (sem hora), vamos forçar a interpretação como data local.
+        const [year, month, day] = agendamento.data_agendamento.split('-').map(Number);
+        const dataLocal = new Date(year, month - 1, day); // month - 1 porque é 0-indexed
+        const diaSemana = diasSemana[dataLocal.getDay()];
         agendamentosPorDia[diaSemana]++;
       }
     });
@@ -281,18 +290,42 @@ const DashboardPsicologo = () => {
         </ResponsiveContainer>
       </div>
 
-      {/* Lista de Próximos Agendamentos */}
-      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-        <div className="flex items-center mb-6">
-          <div className="bg-teal-100 p-2 rounded-lg mr-3">
-            <Calendar className="h-6 w-6 text-teal-600" />
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900">Próximos Agendamentos</h3>
-        </div>
-        {agendamentos.filter(a => a.status === 'confirmado').slice(0, 5).length > 0 ? (
+	      {/* Lista de Próximos Agendamentos */}
+	      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+	        <div className="flex items-center mb-6">
+	          <div className="bg-teal-100 p-2 rounded-lg mr-3">
+	            <Calendar className="h-6 w-6 text-teal-600" />
+	          </div>
+	          <h3 className="text-xl font-semibold text-gray-900">Próximos Agendamentos</h3>
+	        </div>
+{agendamentos
+          .filter(a => {
+            if (a.status !== 'Confirmado') return false;
+            
+            // Combina data e hora para criar um objeto Date completo
+            const [year, month, day] = a.data_agendamento.split('-').map(Number);
+            const [hour, minute] = a.hora_agendamento.substring(0, 5).split(':').map(Number);
+            const agendamentoDateTime = new Date(year, month - 1, day, hour, minute);
+
+            // Compara com a hora atual
+            return agendamentoDateTime >= new Date();
+          })
+          .sort((a, b) => new Date(a.data_agendamento) - new Date(b.data_agendamento))
+          .slice(0, 5)
+          .length > 0 ? (
           <div className="space-y-4">
             {agendamentos
-              .filter(a => a.status === 'confirmado')
+              .filter(a => {
+            if (a.status !== 'Confirmado') return false;
+            
+            // Combina data e hora para criar um objeto Date completo
+            const [year, month, day] = a.data_agendamento.split('-').map(Number);
+            const [hour, minute] = a.hora_agendamento.substring(0, 5).split(':').map(Number);
+            const agendamentoDateTime = new Date(year, month - 1, day, hour, minute);
+
+            // Compara com a hora atual
+            return agendamentoDateTime >= new Date();
+          })
               .sort((a, b) => new Date(a.data_agendamento) - new Date(b.data_agendamento))
               .slice(0, 5)
               .map((agendamento, index) => (
@@ -304,12 +337,12 @@ const DashboardPsicologo = () => {
                     <div>
                       <p className="font-semibold text-gray-900">{agendamento.aluno_nome}</p>
                       <p className="text-sm text-gray-600">
-                        {new Date(agendamento.data_agendamento).toLocaleDateString('pt-BR', { 
+                        {new Date(agendamento.data_agendamento + 'T' + agendamento.hora_agendamento).toLocaleDateString('pt-BR', { 
                           weekday: 'long',
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
-                        })} às {agendamento.hora_agendamento}
+                        })} às {agendamento.hora_agendamento.substring(0, 5)}
                       </p>
                       <p className="text-sm text-gray-500 flex items-center mt-1">
                         <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
@@ -326,15 +359,15 @@ const DashboardPsicologo = () => {
                 </div>
               ))}
           </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="bg-gray-100 p-4 rounded-full w-fit mx-auto mb-4">
-              <Calendar className="h-12 w-12 text-gray-400" />
-            </div>
-            <h4 className="text-lg font-medium text-gray-900 mb-2">Nenhum agendamento confirmado</h4>
-            <p className="text-gray-500">Os próximos agendamentos aparecerão aqui quando forem confirmados</p>
-          </div>
-        )}
+	        ) : (
+	          <div className="text-center py-12">
+	            <div className="bg-gray-100 p-4 rounded-full w-fit mx-auto mb-4">
+	              <Calendar className="h-12 w-12 text-gray-400" />
+	            </div>
+	            <h4 className="text-lg font-medium text-gray-900 mb-2">Nenhum agendamento confirmado</h4>
+	            <p className="text-gray-500">Os próximos agendamentos aparecerão aqui quando forem confirmados</p>
+	          </div>
+	        )}
       </div>
 
       {/* Seção de Resumo Motivacional */}

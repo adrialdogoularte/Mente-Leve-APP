@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -5,6 +6,7 @@ import {
   Calendar, BarChart3, TrendingUp, ArrowLeft
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { mapaPerguntas, mapaOpcoes } from '../data/autoavaliacaoData';
 
 const MinhasAvaliacoes = () => {
   const { user, api } = useAuth();
@@ -260,21 +262,22 @@ const MinhasAvaliacoes = () => {
                         )}
                         {avaliacao.compartilhada && (
                           <span className="inline-flex items-center space-x-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
-                            <Share2 className="h-3 w-3" />
+                            <Users className="h-3 w-3" />
                             <span>Compartilhada</span>
                           </span>
                         )}
                       </div>
-                      
-                      <div className="text-sm text-gray-600 mb-2">
-                        <p><strong>Data:</strong> {formatarData(avaliacao.data_criacao || avaliacao.data_avaliacao || avaliacao.timestamp || 'Data não disponível')}</p>
-                        {avaliacao.pontuacao && (
-                          <p><strong>Pontuação:</strong> {avaliacao.pontuacao}</p>
-                        )}
-                        {avaliacao.compartilhada_com && (
-                          <p><strong>Compartilhada com:</strong> {avaliacao.compartilhada_com}</p>
-                        )}
-                      </div>
+
+                      <p className="text-sm text-gray-500 mb-2">
+                        <Calendar className="inline-block h-4 w-4 mr-1" />
+                        {formatarData(avaliacao.data_criacao || avaliacao.data_avaliacao || avaliacao.timestamp || 'Data não disponível')}
+                      </p>
+
+                      {avaliacao.pontuacao && (
+                        <p className="text-sm text-gray-500 mb-2">
+                          <strong>Pontuação:</strong> {avaliacao.pontuacao}
+                        </p>
+                      )}
 
                       {avaliacao.observacoes && (
                         <p className="text-sm text-gray-500 mb-2">
@@ -369,12 +372,25 @@ const MinhasAvaliacoes = () => {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Respostas</label>
                       <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                        {Object.entries(showDetalhes.respostas).map(([pergunta, resposta], index) => (
-                          <div key={index} className="border-b border-gray-200 pb-2 last:border-b-0">
-                            <p className="text-sm font-medium text-gray-700">{pergunta}</p>
-                            <p className="text-sm text-gray-600">{resposta}</p>
-                          </div>
-                        ))}
+                        {Object.entries(showDetalhes.respostas).map(([perguntaId, respostaId], index) => {
+                          const pergunta = mapaPerguntas[perguntaId];
+                          const resposta = mapaOpcoes[perguntaId] ? mapaOpcoes[perguntaId][respostaId] : null;
+
+                          if (!pergunta || !resposta) {
+                            return (
+                              <div key={index} className="border-b border-gray-200 pb-2 last:border-b-0">
+                                <p className="text-sm font-medium text-red-500">ID da pergunta não encontrado: {perguntaId}</p>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div key={index} className="border-b border-gray-200 pb-2 last:border-b-0">
+                              <p className="text-sm font-medium text-gray-700">{pergunta.texto}</p>
+                              <p className="text-sm text-gray-600"><strong>Resposta:</strong> {resposta.texto}</p>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -393,7 +409,7 @@ const MinhasAvaliacoes = () => {
           </div>
         )}
 
-        {/* Modal de Compartilhamento
+        {/* Modal de Compartilhamento */}
         {showCompartilhamento !== null && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl max-w-md w-full">
@@ -408,50 +424,34 @@ const MinhasAvaliacoes = () => {
                   </button>
                 </div>
 
-                <p className="text-gray-600 mb-4">
-                  Selecione um psicólogo para compartilhar sua avaliação:
-                </p>
-
-                <div className="space-y-3 max-h-60 overflow-y-auto">
-                  {psicologos.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">Nenhum psicólogo disponível</p>
-                  ) : (
-                    psicologos.map((psicologo) => (
-                      <button
-                        key={psicologo.id}
-                        onClick={() => handleCompartilharAvaliacao(showCompartilhamento, psicologo.id)}
-                        className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <Users className="h-5 w-5 text-blue-600" />
+                {psicologos.length > 0 ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">Selecione um psicólogo para compartilhar sua avaliação:</p>
+                    <ul className="max-h-60 overflow-y-auto space-y-2">
+                      {psicologos.map(psicologo => (
+                        <li key={psicologo.id}>
+                          <button
+                            onClick={() => handleCompartilharAvaliacao(showCompartilhamento, psicologo.id)}
+                            className="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center space-x-3"
+                          >
+                            <img src={psicologo.foto_perfil || 'https://via.placeholder.com/40'} alt={psicologo.nome} className="h-10 w-10 rounded-full" />
                             <div>
                               <p className="font-medium text-gray-900">{psicologo.nome}</p>
                               <p className="text-sm text-gray-500">{psicologo.especialidade}</p>
-                              <p className="text-xs text-gray-400">CRP: {psicologo.crp}</p>
                             </div>
-                          </div>
-                          <div className="flex items-center">
-                            {psicologo.disponivel ? (
-                              <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                                Online
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                Offline
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600">Nenhum psicólogo disponível para compartilhamento.</p>
+                )}
 
-                <div className="mt-6 flex space-x-3">
+                <div className="mt-6 flex justify-end">
                   <button
                     onClick={() => setShowCompartilhamento(null)}
-                    className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg font-medium transition-colors"
+                    className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg font-medium transition-colors"
                   >
                     Cancelar
                   </button>
@@ -459,11 +459,11 @@ const MinhasAvaliacoes = () => {
               </div>
             </div>
           </div>
-        )} */}
+        )}
       </main>
-      
     </div>
   );
 };
 
 export default MinhasAvaliacoes;
+
