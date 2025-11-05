@@ -384,12 +384,12 @@ const DashboardPsicologo = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <div className="bg-white bg-opacity-20 px-6 py-3 rounded-lg">
-              <p className="text-sm text-blue-100">Total de Atendimentos</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-sm text-gray-900">Total de Atendimentos</p>
+              <p className="text-black text-2xl font-bold">{stats.total}</p>
             </div>
             <div className="bg-white bg-opacity-20 px-6 py-3 rounded-lg">
-              <p className="text-sm text-blue-100">Taxa de Conclusão</p>
-              <p className="text-2xl font-bold">
+              <p className="text-sm text-gray-900">Taxa de Conclusão</p>
+              <p className="text-black text-2xl font-bold">
                 {stats.total > 0 ? Math.round((stats.concluidos / stats.total) * 100) : 0}%
               </p>
             </div>

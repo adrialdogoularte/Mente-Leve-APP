@@ -3,7 +3,6 @@ import { Calendar, Clock, User, Monitor, MapPin, Eye, X, FileText, BarChart3, Tr
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 
-
 const AgendamentoPsicologo = () => {
   const { user, api } = useAuth();
   const [appointments, setAppointments] = useState([]);
@@ -15,6 +14,8 @@ const AgendamentoPsicologo = () => {
   const [didAttend, setDidAttend] = useState(true);
   const [studentEvaluations, setStudentEvaluations] = useState([]);
   const [loadingEvaluations, setLoadingEvaluations] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [appointmentToCancel, setAppointmentToCancel] = useState(null);
 
   useEffect(() => {
     fetchAppointments();
@@ -87,30 +88,49 @@ const AgendamentoPsicologo = () => {
       if (newStatus === 'Finalizado') {
         data.compareceu = compareceu;
       }
-	
-	      await api.put(`/agendamentos/${appointmentId}/status`, data);
-	      
-	      alert(`Status do agendamento atualizado para ${newStatus} com sucesso!`);
-	      fetchAppointments(); // Recarrega a lista de agendamentos
-	      closeModal(); // Fecha o modal de detalhes
-	      setShowFinalizeModal(false); // Fecha o modal de finalização, se estiver aberto
-	    } catch (error) {
+      await api.put(`/agendamentos/${appointmentId}/status`, data);
+      
+      alert(`Status do agendamento atualizado para ${newStatus} com sucesso!`);
+      fetchAppointments(); // Recarrega a lista de agendamentos
+      closeModal(); // Fecha o modal de detalhes
+      setShowFinalizeModal(false); // Fecha o modal de finalização, se estiver aberto
+      setShowCancelModal(false); // Adicionado para fechar o modal de cancelamento
+    } catch (error) {
 	      console.error('Erro ao atualizar status:', error);
 	      const errorMessage = error.response?.data?.message || 'Erro ao atualizar status. Tente novamente.';
 	      alert(errorMessage);
 	    }
 	  };
 	
-	  const handleFinalizeClick = (appointment) => {
-	    setSelectedAppointment(appointment);
-	    setShowFinalizeModal(true);
-	  };
-	
-	  const handleFinalizeSubmit = () => {
-	    if (selectedAppointment) {
-	      handleUpdateStatus(selectedAppointment.id, 'Finalizado', didAttend);
-	    }
-	  };
+  const handleFinalizeClick = (appointment) => {
+    console.log('handleFinalizeClick - Definindo selectedAppointment:', appointment);
+    setSelectedAppointment(appointment);
+    setShowFinalizeModal(true);
+  };
+
+  const handleFinalizeSubmit = () => {
+    console.log('handleFinalizeSubmit chamado');
+    console.log('selectedAppointment:', selectedAppointment);
+    console.log('didAttend:', didAttend);
+    if (selectedAppointment && selectedAppointment.id) {
+      console.log('Chamando handleUpdateStatus com ID:', selectedAppointment.id);
+      handleUpdateStatus(selectedAppointment.id, 'Finalizado', didAttend);
+    } else {
+      console.error('selectedAppointment eh nulo ou nao tem ID');
+      alert('Erro: Agendamento nao foi carregado corretamente');
+    }
+  };
+
+  const handleCancelClick = (appointment) => {
+    setAppointmentToCancel(appointment);
+    setShowCancelModal(true);
+  };
+
+  const handleCancelConfirm = () => {
+    if (appointmentToCancel) {
+      handleUpdateStatus(appointmentToCancel.id, 'Cancelado');
+    }
+  };
 
   const fetchStudentEvaluations = async (appointmentId) => {
     try {
@@ -420,7 +440,7 @@ const AgendamentoPsicologo = () => {
           </div>
         )}
 
-        {/* Modal de Finalização */}
+        {/* Pop-up de Confirmação de Finalização */}
         {showFinalizeModal && selectedAppointment && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -434,47 +454,28 @@ const AgendamentoPsicologo = () => {
                 </button>
               </div>
               
-              <p className="text-sm text-gray-700 mb-4">
-                Confirme se o aluno **{selectedAppointment.aluno_nome}** compareceu à consulta agendada para **{formatDateShort(selectedAppointment.data_agendamento)}** às **{selectedAppointment.hora_agendamento}**.
+              <p className="text-sm text-gray-700 mb-6">
+                O aluno <strong>{selectedAppointment.aluno_nome}</strong> compareceu à consulta agendada para <strong>{formatDateShort(selectedAppointment.data_agendamento)}</strong> às <strong>{selectedAppointment.hora_agendamento}</strong>?
               </p>
               
-              <div className="space-y-3">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    className="form-radio h-4 w-4 text-green-600"
-                    name="didAttend"
-                    value="true"
-                    checked={didAttend === true}
-                    onChange={() => setDidAttend(true)}
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Aluno Compareceu</span>
-                </label>
-                <label className="inline-flex items-center ml-6">
-                  <input
-                    type="radio"
-                    className="form-radio h-4 w-4 text-red-600"
-                    name="didAttend"
-                    value="false"
-                    checked={didAttend === false}
-                    onChange={() => setDidAttend(false)}
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Aluno Não Compareceu</span>
-                </label>
-              </div>
-              
-              <div className="mt-6 flex justify-end space-x-3">
+              <div className="flex justify-end space-x-3">
                 <button
-                  onClick={() => setShowFinalizeModal(false)}
-                  className="inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  onClick={() => {
+                    setDidAttend(false);
+                    handleFinalizeSubmit();
+                  }}
+                  className="inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
-                  Voltar
+                  Não Compareceu
                 </button>
                 <button
-                  onClick={handleFinalizeSubmit}
+                  onClick={() => {
+                    setDidAttend(true);
+                    handleFinalizeSubmit();
+                  }}
                   className="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  Confirmar Finalização
+                  Sim, Compareceu
                 </button>
               </div>
             </div>
@@ -505,7 +506,7 @@ const AgendamentoPsicologo = () => {
                     Confirmar Agendamento
                   </button>
                   <button
-                    onClick={() => handleUpdateStatus(selectedAppointment.id, 'Cancelado')}
+                    onClick={() => handleCancelClick(selectedAppointment)}
                     className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
                     Cancelar Agendamento
@@ -522,7 +523,7 @@ const AgendamentoPsicologo = () => {
                     Finalizar Consulta
                   </button>
                   <button
-                    onClick={() => handleUpdateStatus(selectedAppointment.id, 'Cancelado')}
+                    onClick={() => handleCancelClick(selectedAppointment)}
                     className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
                     Cancelar Agendamento
@@ -685,6 +686,42 @@ const AgendamentoPsicologo = () => {
                     Fechar
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Confirmação de Cancelamento */}
+        {showCancelModal && appointmentToCancel && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Confirmar Cancelamento</h3>
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <p className="text-sm text-gray-700 mb-6">
+                Tem certeza que deseja cancelar a consulta com <strong>{appointmentToCancel.aluno_nome}</strong> agendada para <strong>{formatDateShort(appointmentToCancel.data_agendamento)}</strong> às <strong>{appointmentToCancel.hora_agendamento}</strong>?
+              </p>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  className="inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Não, Voltar
+                </button>
+                <button
+                  onClick={handleCancelConfirm}
+                  className="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Sim, Cancelar Consulta
+                </button>
               </div>
             </div>
           </div>
