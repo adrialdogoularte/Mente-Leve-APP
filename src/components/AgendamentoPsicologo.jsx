@@ -96,12 +96,12 @@ const AgendamentoPsicologo = () => {
       setShowFinalizeModal(false); // Fecha o modal de finalização, se estiver aberto
       setShowCancelModal(false); // Adicionado para fechar o modal de cancelamento
     } catch (error) {
-	      console.error('Erro ao atualizar status:', error);
-	      const errorMessage = error.response?.data?.message || 'Erro ao atualizar status. Tente novamente.';
-	      alert(errorMessage);
-	    }
-	  };
-	
+		      console.error('Erro ao atualizar status:', error);
+		      const errorMessage = error.response?.data?.message || 'Erro ao atualizar status. Tente novamente.';
+		      alert(errorMessage);
+		    }
+		  };
+		
   const handleFinalizeClick = (appointment) => {
     console.log('handleFinalizeClick - Definindo selectedAppointment:', appointment);
     setSelectedAppointment(appointment);
@@ -276,58 +276,47 @@ const AgendamentoPsicologo = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">
-                          <div className="bg-blue-100 p-3 rounded-full">
-                            <User className="h-6 w-6 text-blue-600" />
-                          </div>
+                          <User className="h-8 w-8 text-blue-500 bg-blue-50 rounded-full p-1" />
                         </div>
                         <div>
-                          <h3 className="text-lg font-medium text-gray-900">
-                            Consulta com {appointment.aluno_nome || 'Aluno'}
-                          </h3>
+                          <p className="text-base font-medium text-gray-900">Consulta com {appointment.aluno_nome}</p>
                           <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
-                            {appointment.modalidade === 'online' && appointment.link_videoconferencia && (
-                              <span className="flex items-center">
-                                <a 
-                                  href={appointment.link_videoconferencia} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="text-blue-500 hover:underline flex items-center"
-                                >
-                                  <Monitor className="h-4 w-4 mr-1" /> Acessar Videochamada
-                                </a>
-                              </span>
+                            {appointment.modalidade === 'online' ? (
+                              <div className="flex items-center">
+                                <Monitor className="h-4 w-4 mr-1 text-blue-500" />
+                                <a href={appointment.link_videochamada} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 transition-colors">Acessar Videochamada</a>
+                              </div>
+                            ) : (
+                              <div className="flex items-center">
+                                <MapPin className="h-4 w-4 mr-1 text-green-500" />
+                                <span>Presencial</span>
+                              </div>
                             )}
-                            <span className="flex items-center">
+                            <div className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
-                              {formatDateShort(appointment.data_agendamento)}
-                            </span>
-                            <span className="flex items-center">
+                              <span>{formatDateShort(appointment.data_agendamento)}</span>
+                            </div>
+                            <div className="flex items-center">
                               <Clock className="h-4 w-4 mr-1" />
-                              {appointment.hora_agendamento}
-                            </span>
-                            <span className="flex items-center">
-                              {appointment.modalidade === 'online' ? (
-                                <>
-                                  <Monitor className="h-4 w-4 mr-1 text-blue-500" />
-                                  <span className="text-blue-600">Online</span>
-                                </>
-                              ) : (
-                                <>
-                                  <MapPin className="h-4 w-4 mr-1 text-green-500" />
-                                  <span className="text-green-600">Presencial</span>
-                                </>
-                              )}
-                            </span>
+                              <span>{appointment.hora_agendamento}</span>
+                            </div>
+                            {appointment.modalidade === 'online' && (
+                              <div className="flex items-center">
+                                <Monitor className="h-4 w-4 mr-1" />
+                                <span>Online</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
+                      
                       <div className="flex items-center space-x-3">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(appointment.status || 'Pendente')}`}>
-                          {getStatusText(appointment.status || 'Pendente')}
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(appointment.status)}`}>
+                          {getStatusText(appointment.status)}
                         </span>
                         <button
                           onClick={() => handleViewDetails(appointment)}
-                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           Ver Detalhes
@@ -342,9 +331,9 @@ const AgendamentoPsicologo = () => {
         )}
 
         {/* Histórico de Consultas */}
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Histórico de Consultas</h2>
-          {pastAppointments.length > 0 ? (
+        {pastAppointments.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Histórico de Consultas</h2>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
               <div className="divide-y divide-gray-200">
                 {pastAppointments.map((appointment) => (
@@ -352,58 +341,47 @@ const AgendamentoPsicologo = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">
-                          <div className="bg-gray-100 p-3 rounded-full">
-                            <User className="h-6 w-6 text-gray-600" />
-                          </div>
+                          <User className="h-8 w-8 text-blue-500 bg-blue-50 rounded-full p-1" />
                         </div>
                         <div>
-                          <h3 className="text-lg font-medium text-gray-900">
-                            Consulta com {appointment.aluno_nome || 'Aluno'}
-                          </h3>
+                          <p className="text-base font-medium text-gray-900">Consulta com {appointment.aluno_nome}</p>
                           <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
-                            {appointment.modalidade === 'online' && appointment.link_videoconferencia && (
-                              <span className="flex items-center">
-                                <a 
-                                  href={appointment.link_videoconferencia} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="text-blue-500 hover:underline flex items-center"
-                                >
-                                  <Monitor className="h-4 w-4 mr-1" /> Acessar Videochamada
-                                </a>
-                              </span>
+                            {appointment.modalidade === 'online' ? (
+                              <div className="flex items-center">
+                                <Monitor className="h-4 w-4 mr-1 text-blue-500" />
+                                <a href={appointment.link_videochamada} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 transition-colors">Acessar Videochamada</a>
+                              </div>
+                            ) : (
+                              <div className="flex items-center">
+                                <MapPin className="h-4 w-4 mr-1 text-green-500" />
+                                <span>Presencial</span>
+                              </div>
                             )}
-                            <span className="flex items-center">
+                            <div className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
-                              {formatDateShort(appointment.data_agendamento)}
-                            </span>
-                            <span className="flex items-center">
+                              <span>{formatDateShort(appointment.data_agendamento)}</span>
+                            </div>
+                            <div className="flex items-center">
                               <Clock className="h-4 w-4 mr-1" />
-                              {appointment.hora_agendamento}
-                            </span>
-                            <span className="flex items-center">
-                              {appointment.modalidade === 'online' ? (
-                                <>
-                                  <Monitor className="h-4 w-4 mr-1 text-blue-500" />
-                                  <span className="text-blue-600">Online</span>
-                                </>
-                              ) : (
-                                <>
-                                  <MapPin className="h-4 w-4 mr-1 text-green-500" />
-                                  <span className="text-green-600">Presencial</span>
-                                </>
-                              )}
-                            </span>
+                              <span>{appointment.hora_agendamento}</span>
+                            </div>
+                            {appointment.modalidade === 'online' && (
+                              <div className="flex items-center">
+                                <Monitor className="h-4 w-4 mr-1" />
+                                <span>Online</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
+                      
                       <div className="flex items-center space-x-3">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(appointment.status || 'Finalizado')}`}>
-                          {getStatusText(appointment.status || 'Finalizado')}
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(appointment.status)}`}>
+                          {getStatusText(appointment.status)}
                         </span>
                         <button
                           onClick={() => handleViewDetails(appointment)}
-                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           Ver Detalhes
@@ -414,80 +392,15 @@ const AgendamentoPsicologo = () => {
                 ))}
               </div>
             </div>
-          ) : (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-              <div className="text-center">
-                <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma consulta realizada</h3>
-                <p className="text-gray-500">
-                  Quando você realizar consultas, elas aparecerão aqui no histórico.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Mensagem quando não há consultas */}
-        {appointments.length === 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            <div className="text-center">
-              <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma consulta agendada</h3>
-              <p className="text-gray-500">
-                Quando os alunos agendarem consultas com você, elas aparecerão aqui.
-              </p>
-            </div>
           </div>
         )}
 
-        {/* Pop-up de Confirmação de Finalização */}
-        {showFinalizeModal && selectedAppointment && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Finalizar Consulta</h3>
-                <button
-                  onClick={() => setShowFinalizeModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-              
-              <p className="text-sm text-gray-700 mb-6">
-                O aluno <strong>{selectedAppointment.aluno_nome}</strong> compareceu à consulta agendada para <strong>{formatDateShort(selectedAppointment.data_agendamento)}</strong> às <strong>{selectedAppointment.hora_agendamento}</strong>?
-              </p>
-              
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setDidAttend(false);
-                    handleFinalizeSubmit();
-                  }}
-                  className="inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  Não Compareceu
-                </button>
-                <button
-                  onClick={() => {
-                    setDidAttend(true);
-                    handleFinalizeSubmit();
-                  }}
-                  className="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Sim, Compareceu
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal de Detalhes */}
+        {/* Modal de Detalhes do Agendamento */}
         {showModal && selectedAppointment && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Detalhes da Consulta</h3>
+            <div className="relative top-10 mx-auto p-8 border w-full max-w-2xl shadow-lg rounded-xl bg-white">
+              <div className="flex items-start justify-between pb-4 border-b border-gray-200">
+                <h3 className="text-2xl font-bold text-gray-900">Detalhes do Agendamento</h3>
                 <button
                   onClick={closeModal}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -496,195 +409,197 @@ const AgendamentoPsicologo = () => {
                 </button>
               </div>
               
-              {/* Botões de Ação */}
-              {selectedAppointment.status === 'Pendente' && (
-                <div className="flex space-x-3 mb-4">
-                  <button
-                    onClick={() => handleUpdateStatus(selectedAppointment.id, 'Confirmado')}
-                    className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  >
-                    Confirmar Agendamento
-                  </button>
-                  <button
-                    onClick={() => handleCancelClick(selectedAppointment)}
-                    className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    Cancelar Agendamento
-                  </button>
-                </div>
-              )}
+              <div className="py-6">
+                {/* Ações */}
+                {selectedAppointment.status === 'Pendente' && (
+                  <div className="flex space-x-3 mb-4">
+                    <button
+                      onClick={() => handleUpdateStatus(selectedAppointment.id, 'Confirmado')}
+                      className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    >
+                      Confirmar Agendamento
+                    </button>
+                    <button
+                      onClick={() => handleCancelClick(selectedAppointment)}
+                      className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      Cancelar Agendamento
+                    </button>
+                  </div>
+                )}
 
-              {selectedAppointment.status === 'Confirmado' && (
-                <div className="flex space-x-3 mb-4">
-                  <button
-                    onClick={() => handleFinalizeClick(selectedAppointment)}
-                    className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Finalizar Consulta
-                  </button>
-                  <button
-                    onClick={() => handleCancelClick(selectedAppointment)}
-                    className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    Cancelar Agendamento
-                  </button>
-                </div>
-              )}
-              
-              {selectedAppointment.status === 'Finalizado' && (
-                <div className="mb-4 p-3 rounded-md bg-gray-100">
-                  <p className="text-sm font-medium text-gray-700">
-                    Consulta Finalizada. Aluno Compareceu: <span className={`font-bold ${selectedAppointment.compareceu ? 'text-green-600' : 'text-red-600'}`}>{selectedAppointment.compareceu ? 'Sim' : 'Não'}</span>
-                  </p>
-                </div>
-              )}
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Aluno</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedAppointment.aluno_nome || 'Nome não disponível'}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">ID do Aluno</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedAppointment.aluno_id || 'ID não disponível'}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Data</label>
-                    <p className="mt-1 text-sm text-gray-900">{formatDate(selectedAppointment.data_agendamento)}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Horário</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedAppointment.hora_agendamento}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Modalidade</label>
-                    <div className="mt-1 flex items-center">
-                      {selectedAppointment.modalidade === 'online' ? (
-                        <>
-                          <Monitor className="h-4 w-4 mr-2 text-blue-500" />
-                          <span className="text-sm text-blue-600">Online</span>
-                        </>
-                      ) : (
-                        <>
-                          <MapPin className="h-4 w-4 mr-2 text-green-500" />
-                          <span className="text-sm text-green-600">Presencial</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
-                    <span className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedAppointment.status || 'Pendente')}`}>
-                      {getStatusText(selectedAppointment.status || 'Pendente')}
-                    </span>
-                  </div>
-                </div>
-                
-                {selectedAppointment.notas && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <FileText className="h-4 w-4 inline mr-1" />
-                      Observações do Aluno
-                    </label>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <p className="text-sm text-gray-900">{selectedAppointment.notas}</p>
-                    </div>
+                {selectedAppointment.status === 'Confirmado' && (
+                  <div className="flex space-x-3 mb-4">
+                    <button
+                      onClick={() => handleFinalizeClick(selectedAppointment)}
+                      className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Finalizar Consulta
+                    </button>
+                    <button
+                      onClick={() => handleCancelClick(selectedAppointment)}
+                      className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      Cancelar Agendamento
+                    </button>
                   </div>
                 )}
                 
-                {/* Seção de Avaliações do Aluno */}
-                {selectedAppointment.permitir_acesso_avaliacoes && (
-                  <div className="mt-6 border-t pt-4">
-                    <div className="flex items-center mb-3">
-                      <BarChart3 className="h-5 w-5 text-blue-500 mr-2" />
-                      <h4 className="text-lg font-medium text-gray-900">Autoavaliações do Aluno</h4>
+                {selectedAppointment.status === 'Finalizado' && (
+                  <div className="mb-4 p-3 rounded-md bg-gray-100">
+                    <p className="text-sm font-medium text-gray-700">
+                      Consulta Finalizada. Aluno Compareceu: <span className={`font-bold ${selectedAppointment.compareceu ? 'text-green-600' : 'text-red-600'}`}>{selectedAppointment.compareceu ? 'Sim' : 'Não'}</span>
+                    </p>
+                  </div>
+                )}
+                
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Aluno</label>
+                      <p className="mt-1 text-sm text-gray-900">{selectedAppointment.aluno_nome || 'Nome não disponível'}</p>
                     </div>
                     
-                    {loadingEvaluations ? (
-                      <div className="text-center py-4">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
-                        <p className="text-sm text-gray-500 mt-2">Carregando avaliações...</p>
-                      </div>
-                    ) : studentEvaluations.length > 0 ? (
-                      <div className="space-y-3 max-h-60 overflow-y-auto">
-                        {studentEvaluations.slice(0, 10).map((evaluation, index) => (
-                          <div key={evaluation.id || index} className="bg-gray-50 rounded-lg p-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium text-gray-700">
-                                {new Date(evaluation.data_criacao).toLocaleDateString('pt-BR')}
-                              </span>
-                              <div className="flex items-center">
-                                <TrendingUp className="h-4 w-4 text-gray-400 mr-1" />
-                                <span className={`text-sm font-medium px-2 py-1 rounded-full ${
-                                  evaluation.nivel_risco === 'baixo' ? 'bg-green-100 text-green-800' :
-                                  evaluation.nivel_risco === 'medio' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {evaluation.nivel_risco === 'baixo' ? 'Baixo Risco' :
-                                   evaluation.nivel_risco === 'medio' ? 'Médio Risco' : 'Alto Risco'}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="mb-2">
-                              <span className="text-xs text-gray-500">Pontuação Total: </span>
-                              <span className="text-sm font-medium text-gray-700">{evaluation.pontuacao_total}</span>
-                            </div>
-                            {evaluation.categorias_pontuacao && Object.keys(evaluation.categorias_pontuacao).length > 0 && (
-                              <div className="grid grid-cols-2 gap-1 text-xs text-gray-600 mb-2">
-                                {Object.entries(evaluation.categorias_pontuacao).slice(0, 4).map(([categoria, pontuacao]) => (
-                                  <div key={categoria}>
-                                    {categoria.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}: {pontuacao}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            {evaluation.recomendacoes && evaluation.recomendacoes.length > 0 && (
-                              <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
-                                <span className="font-medium text-blue-800">Principais recomendações:</span>
-                                <ul className="text-blue-700 mt-1 list-disc list-inside">
-                                  {evaluation.recomendacoes.slice(0, 2).map((rec, idx) => (
-                                    <li key={idx}>{rec}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-4">
-                        <BarChart3 className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                        <p className="text-sm text-gray-500">Nenhuma autoavaliação encontrada</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {!selectedAppointment.permitir_acesso_avaliacoes && (
-                  <div className="mt-6 border-t pt-4">
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                      <div className="flex items-center">
-                        <Eye className="h-5 w-5 text-yellow-500 mr-2" />
-                        <p className="text-sm text-yellow-700">
-                          O aluno não permitiu o acesso às suas autoavaliações para esta consulta.
-                        </p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">ID do Aluno</label>
+                      <p className="mt-1 text-sm text-gray-900">{selectedAppointment.aluno_id || 'ID não disponível'}</p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Data</label>
+                      <p className="mt-1 text-sm text-gray-900">{formatDate(selectedAppointment.data_agendamento)}</p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Horário</label>
+                      <p className="mt-1 text-sm text-gray-900">{selectedAppointment.hora_agendamento}</p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Modalidade</label>
+                      <div className="mt-1 flex items-center">
+                        {selectedAppointment.modalidade === 'online' ? (
+                          <>
+                            <Monitor className="h-4 w-4 mr-2 text-blue-500" />
+                            <span className="text-sm text-blue-600">Online</span>
+                          </>
+                        ) : (
+                          <>
+                            <MapPin className="h-4 w-4 mr-2 text-green-500" />
+                            <span className="text-sm text-green-600">Presencial</span>
+                          </>
+                        )}
                       </div>
                     </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Status</label>
+                      <span className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedAppointment.status || 'Pendente')}`}>
+                        {getStatusText(selectedAppointment.status || 'Pendente')}
+                      </span>
+                    </div>
                   </div>
-                )}
-                
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    onClick={closeModal}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Fechar
-                  </button>
+                  
+                  {selectedAppointment.notas && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <FileText className="h-4 w-4 inline mr-1" />
+                        Observações do Aluno
+                      </label>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-sm text-gray-900">{selectedAppointment.notas}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Seção de Avaliações do Aluno */}
+                  {selectedAppointment.permitir_acesso_avaliacoes && (
+                    <div className="mt-6 border-t pt-4">
+                      <div className="flex items-center mb-3">
+                        <BarChart3 className="h-5 w-5 text-blue-500 mr-2" />
+                        <h4 className="text-lg font-medium text-gray-900">Autoavaliações do Aluno</h4>
+                      </div>
+                      
+                      {loadingEvaluations ? (
+                        <div className="text-center py-4">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                          <p className="text-sm text-gray-500 mt-2">Carregando avaliações...</p>
+                        </div>
+                      ) : studentEvaluations.length > 0 ? (
+                        <div className="space-y-3 max-h-60 overflow-y-auto">
+                          {studentEvaluations.slice(0, 10).map((evaluation, index) => (
+                            <div key={evaluation.id || index} className="bg-gray-50 rounded-lg p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-gray-700">
+                                  {new Date(evaluation.data_criacao).toLocaleDateString('pt-BR')}
+                                </span>
+                                <div className="flex items-center">
+                                  <TrendingUp className="h-4 w-4 text-gray-400 mr-1" />
+                                  <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                                    evaluation.nivel_risco === 'baixo' ? 'bg-green-100 text-green-800' :
+                                    evaluation.nivel_risco === 'medio' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                                  }`}>
+                                    {evaluation.nivel_risco === 'baixo' ? 'Baixo Risco' :
+                                     evaluation.nivel_risco === 'medio' ? 'Médio Risco' : 'Alto Risco'}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="mb-2">
+                                <span className="text-xs text-gray-500">Pontuação Total: </span>
+                                <span className="text-sm font-medium text-gray-700">{evaluation.pontuacao_total}</span>
+                              </div>
+                              {evaluation.categorias_pontuacao && Object.keys(evaluation.categorias_pontuacao).length > 0 && (
+                                <div className="grid grid-cols-2 gap-1 text-xs text-gray-600 mb-2">
+                                  {Object.entries(evaluation.categorias_pontuacao).slice(0, 4).map(([categoria, pontuacao]) => (
+                                    <div key={categoria}>
+                                      {categoria.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}: {pontuacao}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {evaluation.recomendacoes && evaluation.recomendacoes.length > 0 && (
+                                <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
+                                  <span className="font-medium text-blue-800">Principais recomendações:</span>
+                                  <ul className="text-blue-700 mt-1 list-disc list-inside">
+                                    {evaluation.recomendacoes.slice(0, 2).map((rec, idx) => (
+                                      <li key={idx}>{rec}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4">
+                          <BarChart3 className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                          <p className="text-sm text-gray-500">Nenhuma autoavaliação encontrada</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {!selectedAppointment.permitir_acesso_avaliacoes && (
+                    <div className="mt-6 border-t pt-4">
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <div className="flex items-center">
+                          <Eye className="h-5 w-5 text-yellow-500 mr-2" />
+                          <p className="text-sm text-yellow-700">
+                            O aluno não permitiu o acesso às suas autoavaliações para esta consulta.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <button
+                      onClick={closeModal}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Fechar
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -727,6 +642,85 @@ const AgendamentoPsicologo = () => {
           </div>
         )}
       </main>
+      
+      {/* Adicionando o Modal de Finalização */}
+      <FinalizeModal
+        show={showFinalizeModal}
+        onClose={() => setShowFinalizeModal(false)}
+        onSubmit={handleFinalizeSubmit}
+        appointment={selectedAppointment}
+        didAttend={didAttend}
+        setDidAttend={setDidAttend}
+        formatDateShort={formatDateShort}
+      />
+    </div>
+  );
+};
+
+// Modal de Finalização de Consulta
+const FinalizeModal = ({ show, onClose, onSubmit, appointment, didAttend, setDidAttend, formatDateShort }) => {
+  if (!show || !appointment) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-900">Finalizar Consulta</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+        
+        <p className="text-sm text-gray-700 mb-4">
+          Confirme a finalização da consulta com <strong>{appointment.aluno_nome}</strong> agendada para <strong>{formatDateShort(appointment.data_agendamento)}</strong> às <strong>{appointment.hora_agendamento}</strong>.
+        </p>
+        
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">O aluno compareceu à consulta?</label>
+          <div className="flex items-center space-x-4">
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-green-600"
+                name="didAttend"
+                value="true"
+                checked={didAttend === true}
+                onChange={() => setDidAttend(true)}
+              />
+              <span className="ml-2 text-sm text-gray-700">Sim, Compareceu</span>
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-red-600"
+                name="didAttend"
+                value="false"
+                checked={didAttend === false}
+                onChange={() => setDidAttend(false)}
+              />
+              <span className="ml-2 text-sm text-gray-700">Não, Faltou</span>
+            </label>
+          </div>
+        </div>
+        
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={onClose}
+            className="inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+          >
+            Voltar
+          </button>
+          <button
+            onClick={onSubmit}
+            className="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Finalizar Consulta
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
