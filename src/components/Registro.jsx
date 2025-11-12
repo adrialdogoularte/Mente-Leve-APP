@@ -2,10 +2,61 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  Eye, EyeOff, User, Mail, Lock, GraduationCap, Building, Calendar, FileText, AlertCircle, Heart
+  Eye, EyeOff, User, Mail, Lock, GraduationCap, Building, Calendar, FileText, AlertCircle, Heart, CheckCircle
 } from 'lucide-react';
+
+// Função de validação de senha forte (deve ser a mesma lógica do backend)
+const validarSenhaForte = (senha) => {
+  const erros = [];
+  if (senha.length < 8) {
+    erros.push("A senha deve ter no mínimo 8 caracteres.");
+  }
+  if (!/[A-Z]/.test(senha)) {
+    erros.push("A senha deve conter pelo menos uma letra maiúscula.");
+  }
+  if (!/[a-z]/.test(senha)) {
+    erros.push("A senha deve conter pelo menos uma letra minúscula.");
+  }
+  if (!/[0-9]/.test(senha)) {
+    erros.push("A senha deve conter pelo menos um número.");
+  }
+  // Caracteres especiais: !@#$%^&*()_+=\-{}[]:;"'<>,.?/\|
+  if (!/[!@#$%^&*()_+=\-{}\[\]:;\"'<>,.?/\\|]/.test(senha)) {
+    erros.push("A senha deve conter pelo menos um caractere especial.");
+  }
+  return erros;
+};
 import Header from './Header';
 import Footer from './Footer';
+
+// Componente para exibir os requisitos de senha
+const PasswordRequirements = ({ senha }) => {
+  const requisitos = [
+    { label: "Mínimo de 8 caracteres", valido: senha.length >= 8 },
+    { label: "Pelo menos uma letra maiúscula", valido: /[A-Z]/.test(senha) },
+    { label: "Pelo menos uma letra minúscula", valido: /[a-z]/.test(senha) },
+    { label: "Pelo menos um número", valido: /[0-9]/.test(senha) },
+    { label: "Pelo menos um caractere especial", valido: /[!@#$%^&*()_+=\-{}\[\]:;\"'<>,.?/\\|]/.test(senha) },
+  ];
+
+  return (
+    <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+      <p className="text-xs font-medium text-gray-700 mb-1">A senha deve conter:</p>
+      <ul className="space-y-1">
+        {requisitos.map((req, index) => (
+          <li key={index} className="flex items-center text-xs">
+            {req.valido ? (
+              <CheckCircle className="h-3 w-3 text-green-500 mr-1 flex-shrink-0" />
+            ) : (
+              <AlertCircle className="h-3 w-3 text-red-500 mr-1 flex-shrink-0" />
+            )}
+            <span className={req.valido ? "text-green-700" : "text-gray-500"}>{req.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 const Registro = () => {
   const [tipoUsuario, setTipoUsuario] = useState('aluno');
@@ -122,8 +173,10 @@ const Registro = () => {
       return 'As senhas não coincidem';
     }
 
-    if (formData.senha.length < 8) {
-      return 'A senha deve ter pelo menos 8 caracteres';
+    const errosSenha = validarSenhaForte(formData.senha);
+    if (errosSenha.length > 0) {
+      // Retorna o primeiro erro para exibir na mensagem de erro principal
+      return errosSenha[0];
     }
 
     if (tipoUsuario === 'aluno') {
@@ -335,6 +388,8 @@ const Registro = () => {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                {/* Aviso de Requisitos de Senha */}
+                <PasswordRequirements senha={formData.senha} />
               </div>
 
               {/* Confirmar Senha */}
