@@ -12,6 +12,7 @@ const AgendamentoPsicologo = () => {
   const [error, setError] = useState(null);
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const [didAttend, setDidAttend] = useState(true);
+  const [prontuario, setProntuario] = useState(''); // Novo estado para o prontuário
   const [studentEvaluations, setStudentEvaluations] = useState([]);
   const [loadingEvaluations, setLoadingEvaluations] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -82,11 +83,12 @@ const AgendamentoPsicologo = () => {
     }
   };
 
-  const handleUpdateStatus = async (appointmentId, newStatus, compareceu = null) => {
+  const handleUpdateStatus = async (appointmentId, newStatus, compareceu = null, prontuario = null) => {
     try {
       const data = { status: newStatus };
       if (newStatus === 'Finalizado') {
         data.compareceu = compareceu;
+        data.prontuario = prontuario; // Adiciona o prontuário ao payload
       }
       await api.put(`/agendamentos/${appointmentId}/status`, data);
       
@@ -109,12 +111,10 @@ const AgendamentoPsicologo = () => {
   };
 
   const handleFinalizeSubmit = () => {
-    console.log('handleFinalizeSubmit chamado');
-    console.log('selectedAppointment:', selectedAppointment);
-    console.log('didAttend:', didAttend);
     if (selectedAppointment && selectedAppointment.id) {
-      console.log('Chamando handleUpdateStatus com ID:', selectedAppointment.id);
-      handleUpdateStatus(selectedAppointment.id, 'Finalizado', didAttend);
+      // Limpar o estado do prontuário após o envio
+      handleUpdateStatus(selectedAppointment.id, 'Finalizado', didAttend, prontuario);
+      setProntuario('');
     } else {
       console.error('selectedAppointment eh nulo ou nao tem ID');
       alert('Erro: Agendamento nao foi carregado corretamente');
@@ -498,9 +498,22 @@ const AgendamentoPsicologo = () => {
                         {getStatusText(selectedAppointment.status || 'Pendente')}
                       </span>
                     </div>
-                  </div>
-                  
-                  {selectedAppointment.notas && (
+	                  </div>
+	                  
+	                  {/* Novo Bloco: Prontuário (Visível apenas se Finalizado) */}
+	                  {selectedAppointment.status === 'Finalizado' && selectedAppointment.prontuario && (
+	                    <div className="mt-4">
+	                      <label className="block text-sm font-medium text-gray-700 mb-2">
+	                        <FileText className="h-4 w-4 inline mr-1" />
+	                        Prontuário do Atendimento
+	                      </label>
+	                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+	                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedAppointment.prontuario}</p>
+	                      </div>
+	                    </div>
+	                  )}
+	                  
+	                  {selectedAppointment.notas && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         <FileText className="h-4 w-4 inline mr-1" />
@@ -651,6 +664,8 @@ const AgendamentoPsicologo = () => {
         appointment={selectedAppointment}
         didAttend={didAttend}
         setDidAttend={setDidAttend}
+        prontuario={prontuario}
+        setProntuario={setProntuario}
         formatDateShort={formatDateShort}
       />
     </div>
@@ -658,7 +673,7 @@ const AgendamentoPsicologo = () => {
 };
 
 // Modal de Finalização de Consulta
-const FinalizeModal = ({ show, onClose, onSubmit, appointment, didAttend, setDidAttend, formatDateShort }) => {
+const FinalizeModal = ({ show, onClose, onSubmit, appointment, didAttend, setDidAttend, prontuario, setProntuario, formatDateShort }) => {
   if (!show || !appointment) return null;
 
   return (
@@ -677,6 +692,22 @@ const FinalizeModal = ({ show, onClose, onSubmit, appointment, didAttend, setDid
         <p className="text-sm text-gray-700 mb-4">
           Confirme a finalização da consulta com <strong>{appointment.aluno_nome}</strong> agendada para <strong>{formatDateShort(appointment.data_agendamento)}</strong> às <strong>{appointment.hora_agendamento}</strong>.
         </p>
+        
+        {/* Campo Prontuário */}
+        <div className="mb-6">
+          <label htmlFor="prontuario" className="block text-sm font-medium text-gray-700 mb-2">
+            Prontuário
+          </label>
+          <textarea
+            id="prontuario"
+            name="prontuario"
+            rows="6"
+            value={prontuario}
+            onChange={(e) => setProntuario(e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+            placeholder="Registre aqui o prontuário da consulta..."
+          />
+        </div>
         
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">O aluno compareceu à consulta?</label>
@@ -715,7 +746,12 @@ const FinalizeModal = ({ show, onClose, onSubmit, appointment, didAttend, setDid
           </button>
           <button
             onClick={onSubmit}
-            className="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            disabled={!prontuario} // Desabilita se o prontuário estiver vazio
+            className={`inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white transition-colors ${
+              !prontuario
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+            }`}
           >
             Finalizar Consulta
           </button>
