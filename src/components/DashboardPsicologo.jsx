@@ -51,14 +51,29 @@ const DashboardPsicologo = () => {
     diasSemana.forEach(dia => {
       agendamentosPorDia[dia] = 0;
     });
+    // USAR QUANDO FOR USAR TODOS OS DIAS DA SEMANA, DE DOMINGO A SEGUNDA.
+    // agendamentos.forEach(agendamento => {
+    //   if (agendamento.data_agendamento) {
+    //     const data = new Date(agendamento.data_agendamento);
+    //     const [year, month, day] = agendamento.data_agendamento.split('-').map(Number);
+    //     const dataLocal = new Date(year, month - 1, day); // month - 1 porque é 0-indexed
+    //     const diaSemana = diasSemana[dataLocal.getDay()];
+    //     agendamentosPorDia[diaSemana]++;
+    //   }
+    // });
 
-    agendamentos.forEach(agendamento => {
+    // USAR QUANDO FOR SÓ DIAS UTEIS
+      agendamentos.forEach(agendamento => {
       if (agendamento.data_agendamento) {
         const data = new Date(agendamento.data_agendamento);
         const [year, month, day] = agendamento.data_agendamento.split('-').map(Number);
         const dataLocal = new Date(year, month - 1, day); // month - 1 porque é 0-indexed
-        const diaSemana = diasSemana[dataLocal.getDay()];
-        agendamentosPorDia[diaSemana]++;
+        const diaIndex = dataLocal.getDay();
+
+        if (diaIndex >= 1 && diaIndex <= 5) { // Apenas dias úteis (Segunda a Sexta)
+          const diaSemana = diasSemana[diaIndex - 1];
+          agendamentosPorDia[diaSemana]++;
+        }
       }
     });
 
