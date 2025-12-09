@@ -296,4 +296,3 @@ const RegistroHumor = () => {
 };
 
 export default RegistroHumor;
-

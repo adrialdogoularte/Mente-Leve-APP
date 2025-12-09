@@ -215,10 +215,6 @@ const RegistroHumor = () => {
         return dataFormatada.replace(',', '').replace(/\//g, '-');
       }
 
-      // Se a string de data for apenas "YYYY-MM-DD" (sem hora),
-      // formatamos apenas a data e forçamos a hora para 11:00, como no exemplo.
-      // Adiciona "T00:00:00" para forçar o JavaScript a interpretar a data como local,
-      // evitando a conversão para o dia anterior.
       const date = new Date(dataString + 'T00:00:00');
       
       // toLocaleDateString retorna apenas a data (dd/mm/yyyy)
@@ -317,20 +313,7 @@ const RegistroHumor = () => {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Novo Registro</h2>
-              
-              {/* Data do Registro */}
-              {/* <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Data do Registro
-                </label>
-                <input
-                  type="date"
-                  value={dataRegistro}
-                  onChange={(e) => setDataRegistro(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div> */}
-
+             
               {/* Seleção de Humor */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-4">

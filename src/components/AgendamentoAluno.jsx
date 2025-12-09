@@ -31,15 +31,6 @@ const AgendamentoAluno = () => {
       const dateObj = new Date(currentDate + 'T00:00:00');
       const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
       
-      // A nova estrutura de disponibilidade é:
-      // {
-      //   'monday': {
-      //     'YYYY-MM-DD': ['HH:MM', 'HH:MM', ...],
-      //     ...
-      //   },
-      //   ...
-      // }
-      
       const psychologistAvailability = currentPsychologist.availability || {};
       
       // 1. Acessar a disponibilidade para o dia da semana
@@ -116,13 +107,6 @@ const AgendamentoAluno = () => {
     setSelectedPsychologist(psychologist);
     setSelectedMode(''); // Reset mode selection when changing psychologist
     setSelectedTime(''); // Reset time selection when changing psychologist
-    // Não é necessário chamar calculateAvailableTimes() aqui, pois o useEffect
-    // já faz isso quando selectedPsychologist ou selectedDate mudam.
-    // No entanto, para garantir que a lógica de filtragem seja aplicada imediatamente
-    // se a data já estiver selecionada, vamos manter a chamada.
-    // O problema pode ser que a função calculateAvailableTimes não está vendo
-    // o novo estado de selectedPsychologist imediatamente.
-    // Vamos garantir que a função use o objeto psychologist passado.
     calculateAvailableTimes(psychologist, selectedDate);
   };
 

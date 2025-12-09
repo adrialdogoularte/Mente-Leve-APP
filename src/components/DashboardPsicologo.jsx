@@ -46,7 +46,7 @@ const DashboardPsicologo = () => {
   const prepararDadosGraficos = () => {
     // Dados para gráfico de barras - agendamentos por dia da semana
     const agendamentosPorDia = {};
-    const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const diasSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
     
     diasSemana.forEach(dia => {
       agendamentosPorDia[dia] = 0;
@@ -55,13 +55,6 @@ const DashboardPsicologo = () => {
     agendamentos.forEach(agendamento => {
       if (agendamento.data_agendamento) {
         const data = new Date(agendamento.data_agendamento);
-        // data.getDay() retorna 0 para Domingo, 1 para Segunda, etc.
-        // O array diasSemana está correto: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
-        // O problema é que a data vem como 'YYYY-MM-DD' (sem hora), e o new Date() a interpreta como 00:00:00 UTC,
-        // o que pode fazer com que caia no dia anterior no fuso horário local (GMT-3).
-        // A solução é forçar a interpretação como data local, adicionando um offset de tempo.
-        // Ou, mais simples, usar o getUTCDay() se a data for puramente UTC.
-        // Como o backend retorna apenas a data (sem hora), vamos forçar a interpretação como data local.
         const [year, month, day] = agendamento.data_agendamento.split('-').map(Number);
         const dataLocal = new Date(year, month - 1, day); // month - 1 porque é 0-indexed
         const diaSemana = diasSemana[dataLocal.getDay()];

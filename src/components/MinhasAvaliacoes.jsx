@@ -206,15 +206,7 @@ const MinhasAvaliacoes = () => {
               </div>
               <p className="text-2xl font-bold text-gray-900">{estatisticas.mediaPontuacao}</p>
             </div>
-            
-            {/* <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center space-x-2">
-                <Share2 className="h-5 w-5 text-purple-600" />
-                <span className="text-sm text-gray-600">Compartilhadas</span>
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{estatisticas.compartilhadas}</p>
-            </div> */}
-            
+                        
             <div className="bg-white rounded-lg p-4 border border-gray-200">
               <div className="flex items-center space-x-2">
                 <AlertCircle className="h-5 w-5 text-orange-600" />
@@ -299,16 +291,7 @@ const MinhasAvaliacoes = () => {
                       >
                         <Eye className="h-4 w-4" />
                         <span>Ver Detalhes</span>
-                      </button>
-                      
-                      {/* Botão de Compartilhar avaliação */}
-                      {/* <button
-                        onClick={() => setShowCompartilhamento(avaliacao.id || index)}
-                        className="inline-flex items-center space-x-1 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors"
-                      >
-                        <Share2 className="h-4 w-4" />
-                        <span>Compartilhar</span>
-                      </button> */}
+                      </button>                      
                     </div>
                   </div>
                 </div>
