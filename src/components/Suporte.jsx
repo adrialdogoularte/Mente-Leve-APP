@@ -9,21 +9,21 @@ const Suporte = () => {
       phone: '188',
       description: 'Prevenção do suicídio',
       availability: '24 horas, todos os dias',
-      color: 'bg-red-100 text-red-700'
+      color: 'bg-blue-100 text-blue-700'
     },
     {
       name: 'SAMU',
       phone: '192',
       description: 'Serviço de Atendimento Móvel de Urgência',
       availability: '24 horas, todos os dias',
-      color: 'bg-red-100 text-red-700'
+      color: 'bg-blue-100 text-blue-700'
     },
     {
       name: 'Polícia Militar',
       phone: '190',
       description: 'Emergências e segurança pública',
       availability: '24 horas, todos os dias',
-      color: 'bg-red-100 text-red-700'
+      color: 'bg-blue-100 text-blue-700'
     }
   ];
 
@@ -38,7 +38,8 @@ const Suporte = () => {
         'Medicação gratuita'
       ],
       contact: 'Varie por região',
-      website: 'Mais informações'
+      website: 'Mais informações',
+      link: 'https://www.gov.br/saude/pt-br/composicao/saes/desmad/raps/caps'
     },
     {
       name: 'UBS - Unidade Básica de Saúde',
@@ -49,7 +50,8 @@ const Suporte = () => {
         'Acompanhamento básico'
       ],
       contact: 'Varie por região',
-      website: 'Mais informações'
+      website: 'Mais informações',
+      link: 'https://www.gov.br/secom/pt-br/acesso-a-informacao/comunicabr/lista-de-acoes-e-programas/unidades-basicas-de-saude-do-governo-federal'
     },
     {
       name: 'Núcleo de Apoio Psicológico Universitário',
@@ -60,7 +62,8 @@ const Suporte = () => {
         'Orientação acadêmica'
       ],
       contact: 'Contato via universidade',
-      website: 'Mais informações'
+      website: 'Mais informações',
+      link: 'https://www.gov.br/pt-br/servicos/solicitar-atendimento-psicologico'
     }
   ];
 
@@ -93,19 +96,19 @@ const Suporte = () => {
         </div>
 
         {/* Alerta de Emergência */}
-        <div className="bg-red-50 border-l-4 border-red-500 p-6 mb-8 rounded-r-lg">
+        <div className="bg-blue-50 border-l-4 border-gray-700 p-6 mb-8 rounded-r-lg">
           <div className="flex items-start space-x-3">
-            <AlertTriangle className="h-6 w-6 text-red-500 flex-shrink-0 mt-1" />
+            <AlertTriangle className="h-6 w-6 text-gray-600 flex-shrink-0 mt-1" />
             <div>
-              <h3 className="text-lg font-semibold text-red-900 mb-2">Em caso de emergência</h3>
-              <p className="text-red-800 mb-4">
+              <h3 className="text-lg font-semibold text-gray-600 mb-2">Em caso de emergência</h3>
+              <p className="text-gray-600 mb-4">
                 Se você está em risco iminente de autolesão, procure ajuda imediatamente:
               </p>
               <div className="flex flex-wrap gap-4">
-                <a href="tel:188" className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                <a href="tel:188" className="bg-blue-600 hover:bg-blue-800 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                   CVV: 188
                 </a>
-                <a href="tel:192" className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                <a href="tel:192" className="bg-blue-600 hover:bg-blue-800 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                   SAMU: 192
                 </a>
               </div>
@@ -116,7 +119,7 @@ const Suporte = () => {
         {/* Contatos de Emergência */}
         <section className="mb-12">
           <div className="flex items-center space-x-2 mb-6">
-            <Phone className="h-6 w-6 text-red-500" />
+            <Phone className="h-6 w-6 text-orange-500" />
             <h2 className="text-2xl font-bold text-gray-900">Contatos de Emergência</h2>
           </div>
           
@@ -164,10 +167,15 @@ const Suporte = () => {
                     <Phone className="h-4 w-4" />
                     <span>{service.contact}</span>
                   </div>
-                  <button className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1">
+                  <a 
+                    href={service.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
+                  >
                     <ExternalLink className="h-4 w-4" />
                     <span>{service.website}</span>
-                  </button>
+                  </a>
                 </div>
               </div>
             ))}
@@ -212,7 +220,7 @@ const Suporte = () => {
           </div>
           
           <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-6">
-            <p className="text-green-800 text-sm">
+            <p className="text-green-700 text-sm">
               <strong>Lembre-se:</strong> Buscar ajuda é um sinal de força, não de fraqueza. 
               Profissionais de saúde mental estão preparados para ajudar você a superar dificuldades e viver uma vida mais saudável.
             </p>
@@ -250,4 +258,3 @@ const Suporte = () => {
 };
 
 export default Suporte;
-
