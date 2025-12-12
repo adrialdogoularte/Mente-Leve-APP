@@ -220,17 +220,17 @@ const RegistroHumor = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-4">
                   Como você está se sentindo hoje? *
                 </label>
-                <div className="grid grid-cols-5 gap-3">
+                <div className="grid grid-cols-5 sm:grid-cols-5 gap-1">
                   {moods.map((mood) => (
                     <button 
                       key={mood.id} 
                       onClick={() => handleMoodSelect(mood.id)} 
                       className={`
-                        p-4 rounded-lg border-2 transition-all text-center 
+                        p-2 sm:p-4 rounded-lg border-2 transition-all text-center 
                         ${selectedMood === mood.id ? `${mood.color} border-current` : 'bg-white border-gray-200 hover:border-gray-300'}
                       `}
                     >
-                      <div className="text-2xl mb-2">{mood.emoji}</div>
+                      <div className="text-xl sm:text-2xl mb-1 sm:mb-2">{mood.emoji}</div>
                       <div className="text-xs font-medium">{mood.label}</div>
                     </button>
                   ))}
