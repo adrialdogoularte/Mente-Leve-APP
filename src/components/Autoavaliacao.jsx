@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, AlertCircle, Clock, LucideAlertTriangle, AlertTriangle } from 'lucide-react';
 
 
 const Autoavaliacao = () => {
@@ -26,7 +26,7 @@ const Autoavaliacao = () => {
     {
       id: 2,
       categoria: 'Sono e Descanso',
-      texto: 'Como você avalia a qualidade do seu sono nas últimas duas semanas?',
+      texto: 'Considerando o tempo para pegar no sono e a quantidade de horas que dorme por noite. Como você avalia a qualidade do seu sono nas últimas duas semanas?',
       opcoes: [
         { valor: 1, texto: 'Excelente' },
         { valor: 2, texto: 'Boa' },
@@ -130,16 +130,16 @@ const Autoavaliacao = () => {
 
   const finalizarAvaliacao = async () => {
     setLoading(true);
-    
+
     try {
       // Calcular pontuação
       const pontuacaoTotal = Object.values(respostas).reduce((sum, val) => sum + val, 0);
-      
+
       // Determinar nível de risco
       let nivelRisco = 'baixo';
       if (pontuacaoTotal > 28) nivelRisco = 'alto';
       else if (pontuacaoTotal > 16) nivelRisco = 'medio';
-      
+
       // Gerar recomendações
       let recomendacoes = [];
       if (nivelRisco === 'baixo') {
@@ -162,32 +162,33 @@ const Autoavaliacao = () => {
           'Não hesite em procurar ajuda imediata se necessário.'
         ];
       }
-      
+
       const dadosAvaliacao = {
         pontuacao_total: pontuacaoTotal,
         nivel_risco: nivelRisco,
         respostas,
         recomendacoes
       };
-      
+
       // Enviar para o backend
       const token = localStorage.getItem('access_token');
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-      const response = await fetch(`${API_BASE_URL}/api/avaliacoes`, {       method: 'POST',
+      const response = await fetch(`${API_BASE_URL}/api/avaliacoes`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(dadosAvaliacao)
       });
-      
+
       if (!response.ok) {
         throw new Error('Erro ao salvar avaliação no servidor');
       }
-      
+
       const resultado = await response.json();
       setResultado(resultado.avaliacao);
-      
+
     } catch (error) {
       console.error('Erro ao finalizar avaliação:', error);
       alert('Erro ao salvar avaliação. Tente novamente.');
@@ -229,75 +230,107 @@ const Autoavaliacao = () => {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-lg shadow-sm p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Resultado da Autoavaliação
-            </h1>
-            <p className="text-gray-600">
-              Sua avaliação foi concluída com sucesso. Confira os resultados abaixo.
-            </p>
-          </div>
-
-          {/* Resultado Principal */}
-          <div className={`border-2 rounded-lg p-6 mb-6 ${obterCorNivel(resultado.nivel_risco)}`}>
-            <div className="flex items-center justify-center mb-4">
-              {obterIconeNivel(resultado.nivel_risco)}
-              <span className="ml-3 text-xl font-semibold capitalize">
-                {resultado.nivel_risco} Risco
-              </span>
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                Resultado da Autoavaliação
+              </h1>
+              <p className="text-gray-600">
+                Sua avaliação foi concluída com sucesso. Confira os resultados abaixo.
+              </p>
             </div>
-            <div className="text-center mb-4">
-              <span className="text-2xl font-bold">
-                {resultado.pontuacao_total}/40 pontos
-              </span>
+
+            {/* Resultado Principal */}
+            <div className={`border-2 rounded-lg p-6 mb-6 ${obterCorNivel(resultado.nivel_risco)}`}>
+              <div className="flex items-center justify-center mb-4">
+                {obterIconeNivel(resultado.nivel_risco)}
+                <span className="ml-3 text-xl font-semibold capitalize">
+                  {resultado.nivel_risco} Risco
+                </span>
+              </div>
+              <div className="text-center mb-4">
+                <span className="text-2xl font-bold">
+                  {resultado.pontuacao_total}/40 pontos
+                </span>
+              </div>
+              <p className="text-center">
+                {obterMensagemNivel(resultado.nivel_risco)}
+              </p>
             </div>
-            <p className="text-center">
-              {obterMensagemNivel(resultado.nivel_risco)}
-            </p>
-          </div>
 
-          {/* Recomendações */}
-          <div className="bg-blue-50 rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-blue-900 mb-4">
-              Recomendações Personalizadas
-            </h3>
-            <ul className="space-y-3">
-              {resultado.recomendacoes.map((recomendacao, index) => (
-                <li key={index} className="flex items-start">
-                  <span className="text-blue-500 mr-3 mt-1">•</span>
-                  <span className="text-blue-800">{recomendacao}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+            {/* Recomendações */}
+            <div className="bg-blue-50 rounded-lg p-6 mb-6">
+              <h3 className="text-lg font-semibold text-blue-900 mb-4">
+                Recomendações Personalizadas
+              </h3>
+              <ul className="space-y-3">
+                {resultado.recomendacoes.map((recomendacao, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="text-blue-500 mr-3 mt-1">•</span>
+                    <span className="text-blue-800">{recomendacao}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Lembrete de ADVERTÊNCIA*/}
+            <div className="grid md:grid-cols-1 gap-6">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+                <div className="flex items-center space-x-2 mb-6">
+                  <AlertTriangle className="h-6 w-6 text-yellow-500" />
+                  <h2 className="text-2xl font-bold text-gray-900">IMPORTANTE: ADVERTÊNCIA CLÍNICA</h2>
+                </div>
+                <p className="text-gray-600 mb-6">
+                  O resultado desta autoavaliação é um instrumento
+                  de rastreio momentâneo e reflete apenas uma predisposição
+                  ou estado emocional no momento em que foi realizado.
+                </p>
 
-          {/* Ações */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={() => navigate("/minhas-avaliacoes")}
-              className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              Ver Histórico de Avaliações
-            </button>
-            <button
-              onClick={() => {
-                setResultado(null);
-                setRespostas({});
-                setPerguntaAtual(0);
-              }}
-              className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-            >
-              Nova Avaliação
-            </button>
-            <button
-              onClick={() => navigate("/")}
-              className="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-            >
-              Voltar ao Início
-            </button>
+                <div className="flex items-center space-x-2 mb-6">
+                  <AlertTriangle className="h-6 w-9 text-yellow-500" />
+                  <h2 className="text-2xl font-bold text-gray-900">ESTE RESULTADO NÃO CONSTITUI UM DIAGNÓSTICO CLÍNICO</h2>
+                </div>
+                <p className="text-gray-600 mb-6">
+                  Ele serve como um embasamento inicial
+                  para sua própria reflexão e para auxiliar
+                  um profissional de saúde mental a compreender a sua situação atual.
+                </p>
+                <p className="text-gray-600 mb-6">
+                  A autoavaliação não substitui a consulta, a avaliação e o acompanhamento
+                  de um profissional de psicologia ou psiquiatria. Apenas um profissional qualificado
+                  pode realizar um diagnóstico preciso e indicar o tratamento adequado.
+                </p>
+                <p className="text-gray-600 mb-6">
+                  Em caso de emergência ou risco, procure imediatamente um serviço de saúde.
+                </p>
+              </div>
+            </div> <br></br>
+
+            {/* Ações */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={() => navigate("/minhas-avaliacoes")}
+                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Ver Histórico de Avaliações
+              </button>
+              <button
+                onClick={() => {
+                  setResultado(null);
+                  setRespostas({});
+                  setPerguntaAtual(0);
+                }}
+                className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+              >
+                Nova Avaliação
+              </button>
+              <button
+                onClick={() => navigate("/")}
+                className="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              >
+                Voltar ao Início
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       </div>
     );
   }
@@ -318,10 +351,10 @@ const Autoavaliacao = () => {
             <p className="text-gray-600 mb-6">
               Responda as perguntas com honestidade para obter uma avaliação personalizada do seu bem-estar atual.
             </p>
-            
+
             {/* Progresso */}
             <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-              <div 
+              <div
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${((perguntaAtual + 1) / perguntas.length) * 100}%` }}
               ></div>
@@ -338,7 +371,7 @@ const Autoavaliacao = () => {
                 {pergunta.categoria}
               </span>
             </div>
-            
+
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
               {pergunta.texto}
             </h2>
@@ -349,18 +382,16 @@ const Autoavaliacao = () => {
                 <button
                   key={opcao.valor}
                   onClick={() => handleResposta(opcao.valor)}
-                  className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-                    respostaAtual === opcao.valor
-                      ? 'border-blue-500 bg-blue-50 text-blue-900'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className={`w-full text-left p-4 rounded-lg border-2 transition-all ${respostaAtual === opcao.valor
+                    ? 'border-blue-500 bg-blue-50 text-blue-900'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
                 >
                   <div className="flex items-center">
-                    <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
-                      respostaAtual === opcao.valor
-                        ? 'border-blue-500 bg-blue-500'
-                        : 'border-gray-300'
-                    }`}>
+                    <div className={`w-4 h-4 rounded-full border-2 mr-3 ${respostaAtual === opcao.valor
+                      ? 'border-blue-500 bg-blue-500'
+                      : 'border-gray-300'
+                      }`}>
                       {respostaAtual === opcao.valor && (
                         <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
                       )}
@@ -378,11 +409,10 @@ const Autoavaliacao = () => {
             <button
               onClick={perguntaAnterior}
               disabled={perguntaAtual === 0}
-              className={`flex items-center px-4 py-2 rounded-lg font-medium ${
-                perguntaAtual === 0
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
+              className={`flex items-center px-4 py-2 rounded-lg font-medium ${perguntaAtual === 0
+                ? 'text-gray-400 cursor-not-allowed'
+                : 'text-gray-700 hover:bg-gray-100'
+                }`}
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
               Anterior
@@ -392,11 +422,10 @@ const Autoavaliacao = () => {
               <button
                 onClick={finalizarAvaliacao}
                 disabled={!todasRespondidas || loading}
-                className={`flex items-center px-6 py-2 rounded-lg font-medium ${
-                  todasRespondidas && !loading
-                    ? 'bg-green-600 text-white hover:bg-green-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+                className={`flex items-center px-6 py-2 rounded-lg font-medium ${todasRespondidas && !loading
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
               >
                 {loading ? 'Finalizando...' : 'Finalizar Avaliação'}
                 <CheckCircle className="w-4 h-4 ml-1" />
@@ -405,11 +434,10 @@ const Autoavaliacao = () => {
               <button
                 onClick={proximaPergunta}
                 disabled={!respostaAtual}
-                className={`flex items-center px-4 py-2 rounded-lg font-medium ${
-                  respostaAtual
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+                className={`flex items-center px-4 py-2 rounded-lg font-medium ${respostaAtual
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
               >
                 Próxima
                 <ChevronRight className="w-4 h-4 ml-1" />
